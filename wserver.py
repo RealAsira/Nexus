@@ -194,4 +194,8 @@ try:
 
 except Exception as err:
   connection.close()
+<<<<<<< HEAD
   print("Unknown Fatal Error: ", err)
+=======
+  print("Fatal Error: ", err)
+>>>>>>> dev
