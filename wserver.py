@@ -1,24 +1,12 @@
+import datetime
 import os
 import socket
 
 
 # GLOBAL VARIABLES
-request_headers = {}    #client's request headers
-response_headers = {}   # custom response headers
-response_content = """
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>W-Lang</title>
-  </head>
-  <body>
-    <h2>W-Lang Website</h2>
-  </body>
-</html>
-"""
-response_statusCode = 200
-response_statusMessage = 'OK'
-response_contentType = 'text/html'
+request_headers = {}    # client's request headers
+response_headers = {}   # server's response headers
+response_content = None # content returned by server
 
 
 
@@ -53,7 +41,7 @@ try:
           config[setting.strip()] = str(value.strip())
 
 except Exception as err:
-  print('Fatal error: wserver.config error ... ' + str(err))
+  print('Fatal Error: wserver.config error ... ' + str(err))
   os._exit(0)
 
 
@@ -85,8 +73,8 @@ for host in SOCKETHOSTS:
     try:
       aSocket.bind((host, int(port)))
       print('listening on ' + host + ':' + str(port))
-    except Exception as err:
-      print('couldn\'t bind ' + host + ':' + str(port) + ' ... ' + str(err))
+    except Exception as bindFail:
+      print('couldn\'t bind ' + host + ':' + str(port) + ' ... ' + str(bindFail))
 
 # LISTEN TO x CONNECTIONS CONCURRENTLY
 aSocket.listen(int(config['max_connections']))
@@ -108,6 +96,7 @@ def parseRequest(request):
   request_headers['method'] = method
   request_headers['path'] = path
   request_headers['protocol'] = protocol
+  request_headers['date'] = datetime.datetime.now().strftime("%a, $d %b %Y %H:%M:00 MST")
 
   for line in lines[1:]:
     if line == "":
@@ -119,17 +108,70 @@ def parseRequest(request):
   return(request_headers)
 
 
+
+
+
 def constructResponse():
-  response =  f"HTTP/1.1 {response_statusCode} {response_statusMessage}\r\n"
-  response += f"Content-Type: {response_contentType}"
+  global response_headers
+  global response_content
+
+
+  # TOKENIZE AND PARSE W-LANG FILES ... begin with _onStart.wlang
+  # get starting .wlang script
+  try:
+    scriptPath = config['library'] + '/_onStart.wlang'
+    with open(scriptPath, "r", encoding="utf-8") as file:
+      response_content = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
+  except:
+    print("Fatal Error: _onStart.wlang file doesn't exist in the configured library directory.")
+
+  # attempt tokenization
+  try:
+    tokens = tokenizeScript(scriptPath)
+  except Exception as err:
+    print('Fatal Error: Could not parse script ' + str(script) + ' ... Error: ' + str(err))
+
+  # attempt parse
+  try:
+    AST = parseTokens(tokens)
+  except Exception as err:
+    print('Fatal Error: Could not parse tokenized script into AST ... Error: ' + str(err))
+  
+
+  # set default headers
+  response_headers.setdefault('statusCode', 200)
+  response_headers.setdefault('statusMessage', 'OK')
+  response_headers.setdefault('contentType', 'text/html; charset="UTF-8"')
+  response_headers.setdefault('connection', 'close')
+
+  # construct the payload header
+  response =  f"HTTP/1.1 {response_headers['statusCode']} {response_headers['statusMessage']}\r\n"
   response += f"Content-Length: {len(response_content.encode('utf-8'))}\r\n"
-  response += f"Connection: close\r\n"  
-  response += f"\r\n" # end of headers
+  response += f"Connection: {response_headers['connection']}\r\n"  
+  response += f"Content-Type: {response_headers['contentType']}\r\n"
+  response += f"Date: {datetime.datetime.now().strftime('%a, %d %b %Y %H:%M:00 MST')}\r\n"
+ #response += f"set-cookie: cookieName=%7BcookieVal%7D; domain=www.example.com; expires=Wed, 11 Feb 2026 00:00:00 GMT;SameSite=Lax\r\n"
+  
+  # append payload content
+  response += f"\r\n" # this line marks end of headers
   response += response_content
   return response
 
 
 
+
+
+# TOKENIZE .wlang SCRIPTS INTO COMMAND STACK
+def tokenizeScript(script):
+  return 0
+
+
+
+
+
+# PARSE TOKENS from tokenizeScript) INTO ABSTRACT SYNTAX TREE
+def parseTokens(tokens):
+  return 0
 
 
 
@@ -140,14 +182,16 @@ try:
     clientRequest = connection.recv(1024).decode("utf-8")
 
     if len(clientRequest) > 0:
-      svr = parseRequest(clientRequest)
-      print(svr)
-      print(svr['path'])
+      parseRequest(clientRequest)
+      print(request_headers)
+      print('\n')
 
       response = constructResponse()
+      print(response)
+
       connection.sendall(response.encode('utf-8'))
       connection.close()
 
 except Exception as err:
   connection.close()
-  print("Error:", err)
+  print("Fatal Error: ", err)
