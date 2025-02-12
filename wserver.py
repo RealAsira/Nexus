@@ -48,11 +48,6 @@ except Exception as err:
 
 
 
-# INIT SOCKET
-aSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-aSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-
 # if single host is listened to then convert to list for iteration
 if config['hosts'] == str(config['hosts']):
   SOCKETHOSTS = [str(config['hosts'])]
@@ -67,17 +62,20 @@ else:
 
 
 # ATTEMPT SOCKET BIND
+sockets = []
 for host in SOCKETHOSTS:
   for port in SOCKETPORTS:
+    # init sockets
+    aSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    aSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # start listening on host:port combo(s)
     try:
       aSocket.bind((host, int(port)))
+      aSocket.listen(int(config['max_connections']))  # max connections
+      sockets.append(aSocket)
       print('listening on ' + host + ':' + str(port))
     except Exception as bindFail:
       print('couldn\'t bind ' + host + ':' + str(port) + ' ... ' + str(bindFail))
-
-# LISTEN TO x CONNECTIONS CONCURRENTLY
-aSocket.listen(int(config['max_connections']))
 
 
 
@@ -178,19 +176,20 @@ def parseTokens(tokens):
 # GET DATA FROM PORT TO BEGIN RESPONSE
 try:
   while True:
-    connection, address = aSocket.accept()
-    clientRequest = connection.recv(1024).decode("utf-8")
+    for aSocket in sockets:
+      connection, address = aSocket.accept()
+      clientRequest = connection.recv(1024).decode("utf-8")
 
-    if len(clientRequest) > 0:
-      parseRequest(clientRequest)
-      print(request_headers)
-      print('\n')
+      if len(clientRequest) > 0:
+        parseRequest(clientRequest)
+        print(request_headers)
+        print('\n')
 
-      response = constructResponse()
-      print(response)
+        response = constructResponse()
+        print(response)
 
-      connection.sendall(response.encode('utf-8'))
-      connection.close()
+        connection.sendall(response.encode('utf-8'))
+        connection.close()
 
 except Exception as err:
   connection.close()
