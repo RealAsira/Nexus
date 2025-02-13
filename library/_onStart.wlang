@@ -1,170 +1,21 @@
-// single-line comment
-/* multi-line comment */
 
-/*
-Semi-colons are OPTIONAL...
-A new line also indicates the end of an expression
-*/
+@func add (num1(int, float), num2(int, float)) {
 
-
-
-// FUNCTIONS
-// all functions and expressions begin with @
-// function calls must have () parenthesis for args, even if none are required or given
-@response_header('statusMessage', 'GOOD')
-@response_header('custom1', 'Goodnight sky!')
-@response_header('custom1', 'Goodnight sky!'); response_header('custom1', 'Goodnight sky!')
-
-
-
-// CREATING FUNCTIONS
-// uses the @func function, followed by name, followed by function parameters
-@func foo (arg1, arg2) {
-  //def
-} #optional semi-colon end
-
-// call function
-@foo(arg1, arg2);
-
-@func add (arg1(TYPE), arg2(TYPE)) {
-  //def
-}
-// arg1 and arg2 are parameter names...
-// type argument for the parameters, like variables (see below) are optional
-
-@func sub (bigNumb, smlNumb) {
-  //def
 }
 
-// by default, functions can access variables scoped above them
-// use protected function to restrict scope
-@func multi (PROTECTD, arg1, arg2) {
- //def
- // adding "PROTECTED" as any of the arguments makes this function a protected function 
-}
+/*TOKENIZE
 
+@     -expression start
+func  -expression pointer
+add   -expression name
+num1  -arg
+int   -type
+float -type
+num2  -arg
+int   -type
+float -type
+{     -definition start
+}     -definition end
+(newline) - expression end
 
-
-//VARIABLES
-
-@var bar(TYPE) = 'value';
-// type is optional ... default type is variant
-// giving a type will make variable static (unless variant)
-// once static, the value can change but the type cannot
-// by definition, variant type is dynamic
-
-@const pi(float) = 3.14;
-// type is required
-// value cannot change
-
-// remove the variable value and variable itself
-@bar.kill();  
-@pi.kill();
-
-// change value
-@bar = "";
-@bar = "
-  //multi-line values are allowed
-";
-
-
-//Variable Types
--boolean
--float
--double (subtype of float... currently no difference)
--money  (subtype of float... returns 0.00 format)
--int (returns nearest whole number)
-
--datetime
--string
--null
--variant
--function (variables are simply pointers to something else. Most point to a value. function-typed vars point to functions)
--reference (points to another variable, expressions, data struct, function, etc... @var bar2(reference) = @bar;)
-
--base64
--hex
--utf8
-
--dict
--array
-
-
-
-// conditional statements
-@if(condition, ifTrue, ifFalse);
-
-
-@ifTrue(condition) {
-  // only run if condition was true
-}
-
-@ifFalse(condition) {
-  // only run if condition was false
-}
-
-@switch(expression){
-  @when = 'value' {
-
-  }
-
-  @when = 'different-value' {
-
-  }
-
-  @else {
-    //catch all
-  }
-}
-
-
-
-
-// disable keyword ... disables the next expression from running
-disable @bar; //won't return bar
-disable @func foo2() {...} //won't create function
-
-//nointerpret keyword ... returns expression as plain text
-@var bar(int) = 5;
-nointerpret @bar; //returns "@bar;" instead of 5
-nointerpret @func foo3() {...} // instead of creating a "function-typed" var called foo3 that points to this block of code, the literal text of the function is returned
-
-
-// calculate an expression
-@calc(5+5) //returns 10
-@var bar1 = 5+5               // because there is no quotes and the value appears to be a calculation, an error is raised
-@var bar2(int) = 5+5          // because "+" isn't a number, an error is raised
-@var bar3 = "5+5"             // returns 5+5 as variant
-@var bar4(int) = @calc(5+5)   // because @calc(5+5) returns 10, the value of bar4 would be set to 10
-
-+       add
--       sub
-*       mul
-/       div
-**      pow of    5**2 = 25 (sqr of 5) 
-//      root of   25//2 = 5 (sqrt of 25)
-%       modulus of
-abs     absolute val
-trunc   truncate float to int
-floor   round float down to int
-ceil    round float up to int
-+=      add val to existing val
--=      sub val from existing val
-*=      mul val to existing val
-/=      div existing val from val
-cos
-sin
-tan
-acos
-asin
-atan
-exp   exponentiation of e (exp(10) = e^10) ??should I keep?
-nlog  natural log
-log   log of
-
-
-
-
-/*
-CREATE VSCODE EXTENSION
 */
