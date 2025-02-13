@@ -1,21 +1,3 @@
-
 @func add (num1(int, float), num2(int, float)) {
-
+  @print('goodnight sky');
 }
-
-/*TOKENIZE
-
-@     -expression start
-func  -expression pointer
-add   -expression name
-num1  -arg
-int   -type
-float -type
-num2  -arg
-int   -type
-float -type
-{     -definition start
-}     -definition end
-(newline) - expression end
-
-*/
