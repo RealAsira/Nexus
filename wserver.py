@@ -1,6 +1,8 @@
 import datetime
 import os
 import socket
+from wtokenizer import tokenizeScript
+from wparser import parseTokens
 
 
 # GLOBAL VARIABLES
@@ -156,20 +158,6 @@ def constructResponse():
   return response
 
 
-
-
-
-# TOKENIZE .wlang SCRIPTS INTO COMMAND STACK
-def tokenizeScript(script):
-  return 0
-
-
-
-
-
-# PARSE TOKENS from tokenizeScript) INTO ABSTRACT SYNTAX TREE
-def parseTokens(tokens):
-  return 0
 
 
 
