@@ -127,15 +127,15 @@ def constructResponse():
 
   # attempt tokenization
   try:
-    tokens = tokenizeScript(scriptPath)
+    tokens = tokenizeScript(response_content)
   except Exception as err:
-    print('Fatal Error: Could not parse script ' + str(script) + ' ... Error: ' + str(err))
+    print('Fatal Error: Could not tokenize script ' + str(response_content) + ' ... Error: ' + str(err))
 
   # attempt parse
   try:
     AST = parseTokens(tokens)
   except Exception as err:
-    print('Fatal Error: Could not parse tokenized script into AST ... Error: ' + str(err))
+    print('Fatal Error: Could not parse tokens into nodal-AST ... Error: ' + str(err))
   
 
   # set default headers
@@ -170,11 +170,11 @@ try:
 
       if len(clientRequest) > 0:
         parseRequest(clientRequest)
-        print(request_headers)
-        print('\n')
+        #print(request_headers)
+        #print('\n')
 
         response = constructResponse()
-        print(response)
+        #print(response)
 
         connection.sendall(response.encode('utf-8'))
         connection.close()
