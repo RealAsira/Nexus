@@ -1,158 +1,102 @@
-// single-line comment
-/* multi-line comment */
-
-/*
-Semi-colons are OPTIONAL...
-A new line also indicates the end of an expression
-*/
+//remember... language is case insensitive
 
 
 
-// FUNCTIONS
-// all functions and expressions begin with @
-// function calls must have () parenthesis for args, even if none are required or given
-@response_header('statusMessage', 'GOOD')
-@response_header('custom1', 'Goodnight sky!')
-@response_header('custom1', 'Goodnight sky!'); response_header('custom1', 'Goodnight sky!')
-
-
-
-// CREATING FUNCTIONS
-// uses the @func function, followed by name, followed by function parameters
-@func foo (arg1, arg2) {
-  //def
-} #optional semi-colon end
-
-// call function
-@foo(arg1, arg2);
-
-@func add (arg1(TYPE), arg2(TYPE)) {
-  //def
-}
-// arg1 and arg2 are parameter names...
-// type argument for the parameters, like variables (see below) are optional
-// overloaded parameters @func add (arg1(type, type), arg2(type, type)) {...}
-
-@func sub (bigNumb, smlNumb) {
-  //def
-}
-
-// by default, functions can access variables scoped above them
-// use protected function to restrict scope
-@func multi (PROTECTD, arg1, arg2) {
- //def
- // adding "PROTECTED" as any of the arguments makes this function a protected function 
-}
-
-
-
-//VARIABLES
-
-@var bar(TYPE) = 'value';
-// type is optional ... default type is variant
-// giving a type will make variable static (unless variant)
-// once static, the value can change but the type cannot
-// by definition, variant type is dynamic
-
-@const pi(float) = 3.14;
-// type is required
-// value cannot change
-
-// remove the variable value and variable itself
-@bar.kill();  
-@pi.kill();
-
-// change value
-@bar = "";
-@bar = "
-  //multi-line values are allowed
+//variables
+@var bar(int) = 0;    //immutable type... val can change
+@bar = 5;             //change value
+@var bar2 = 5;        //mutable type... val can change
+@var aString = "      //multi-line strings are allowed
+  Some content
+  and some more
 ";
 
 
-//Variable Types
--boolean
--float
--double (subtype of float... currently no difference)
--money  (subtype of float... returns 0.00 format)
--int (returns nearest whole number)
 
--datetime
--string
--null
--variant
--function (variables are simply pointers to something else. Most point to a value. function-typed vars point to functions)
--reference (points to another variable, expressions, data struct, function, etc... @var bar2(reference) = @bar;)
-
--base64
--hex
--utf8
-
--dict
--array
+// calculate an expression
+@calc(5+5)                    //returns 10
+@var bar1 = 5+5               // because there is no quotes and the value appears to be a calculation, an error is raised
+@var bar2(int) = 5+5          // because "+" isn't a number, an error is raised
+@var bar3 = "5+5"             // returns 5+5 as variant
+@var bar4(int) = @calc(5+5)   // because @calc(5+5) returns 10, the value of bar4 would be set to 10
 
 
 
-// conditional statements
-@if(condition, ifTrue, ifFalse);
+@const pi(float) = 3.14; //immutable type and val... type REQUIRED
+@pi.kill()  //.kill method removes variable entirely
 
 
-@ifTrue(condition) {
-  // only run if condition was true
+
+//accepts ints or floats
+@func add (num1(int, float), num2(int, float)) {
+  @print(@calc(@num1 + @num2));
+}
+@add(@bar, @bar2);  //10
+
+
+
+//accepts only ints
+@func sub (num1(int), num2(int)) {
+  @print(@calc(@num1 - @num2))
+}
+@sub(@bar, @bar2); //0
+
+
+
+//accepts variants (any type)
+@func mul(num1, num2, PROTECTED) {
+  @print(@calc(@bar * @bar2));  // RAISE ERROR
+  @print(@calc(@num1 * @num2)); // works since bar, bar2 are passed in
+}
+@mul(@bar, @bar2);  //error on first attempt... 25 on second
+
+/*
+alt idea for protected... use getglobal to import a global variable
+using executescript() {...} would limit allowed expressions such as getglobal
+args passed to executescript could be referenced within the script
+maybe both?
+*/
+
+@mul(@bar, @bar2, DISABLE);       //returns nothing
+@mul(@bar, @bar2, disable=1)      //is disabled
+@mul(@bar, @bar2, disable=0)      //not disabled
+@mul(@bar, @bar2, NOINTERPRET);   //returns this literal string of code
+@func foo(NOINTERPRET, DISABLED){ //without disabled would return entire node... disabled takes precedence here
+
 }
 
-@ifFalse(condition) {
-  // only run if condition was false
+
+
+//conditionals
+@if(condition, true, false)       //ternary
+
+@ifTrue(condition) {              //execute block if condition is true
+
 }
+@ifFalse(condition){              //execute block if condition false
 
-@switch(expression){
-  @when = 'value' {
-
-  }
-
-  @when = 'different-value' {
+}
+@switch(expression){              //do something when expression evals to x or y etc
+  @when('val1'){
 
   }
-
-  @else {
+  @else(){
     //catch all
   }
 }
 
 
 
-
-// disable keyword ... disables the next expression from running
-disable @bar; //won't return bar
-disable @func foo2() {...} //won't create function
-
-//nointerpret keyword ... returns expression as plain text
-@var bar(int) = 5;
-nointerpret @bar; //returns "@bar;" instead of 5
-nointerpret @func foo3() {...} // instead of creating a "function-typed" var called foo3 that points to this block of code, the literal text of the function is returned
+@response_header('statusMessage', 'GOOD');
+@response_header('custom1', 'Goodnight Sky!');
 
 
-// calculate an expression
-@calc(5+5) //returns 10
-@var bar1 = 5+5               // because there is no quotes and the value appears to be a calculation, an error is raised
-@var bar2(int) = 5+5          // because "+" isn't a number, an error is raised
-@var bar3 = "5+5"             // returns 5+5 as variant
-@var bar4(int) = @calc(5+5)   // because @calc(5+5) returns 10, the value of bar4 would be set to 10
-
-+       add
--       sub
-*       mul
-/       div
-**      pow of    5**2 = 25 (sqr of 5) 
-//      root of   25//2 = 5 (sqrt of 25)
-%       modulus of
+// NOT YET ADDED OPERATORS
+/*
 abs     absolute val
 trunc   truncate float to int
 floor   round float down to int
 ceil    round float up to int
-+=      add val to existing val
--=      sub val from existing val
-*=      mul val to existing val
-/=      div existing val from val
 cos
 sin
 tan
@@ -162,10 +106,32 @@ atan
 exp   exponentiation of e (exp(10) = e^10) ??should I keep?
 nlog  natural log
 log   log of
+*/
 
 
 
+
+
+
+//SEE WHICH TOKENS AREN'T REP'd IN THIS TEST FILES
+//INTEGRITY CHECKING!
+
+//SLEEPING/WAITING
+//ASYNC
+//AFTER RESPONSE SCRIPT (DEFER)
+
+//private, public, protected class variables, methods
+//.asint, etc
+//error handling, try, catch, throw, finally/always
+
+//enum?
+//loops
+
+//methods like .type, .add, etc
+//.getMethods to return available methods for the type
+
+//how to handle multiple libs/modules/global scoping?
 
 /*
-CREATE VSCODE EXTENSION
+NEED TO CREATE VSCODE SYNTAX HIGHLIGHT EXTENSION
 */
