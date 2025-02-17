@@ -1,7 +1,7 @@
 import datetime
 import os
 import socket
-from nextokenizer import tokenizeScript
+from nexTokenizer import tokenizeScript
 from nexParser import parseTokens
 
 
