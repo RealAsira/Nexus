@@ -128,16 +128,15 @@ def constructResponse():
   # attempt tokenization
   try:
     tokens = tokenizeScript(response_content)
+
+    # attempt parse
+    try:
+      AST = parseTokens(tokens)
+    except Exception as err:
+      print('Fatal Error: Could not parse tokens into nodal-AST ... Error: ' + str(err))
   except Exception as err:
     print('Fatal Error: Could not tokenize script ' + str(response_content) + ' ... Error: ' + str(err))
-
-  # attempt parse
-  try:
-    AST = parseTokens(tokens)
-  except Exception as err:
-    print('Fatal Error: Could not parse tokens into nodal-AST ... Error: ' + str(err))
   
-
   # set default headers
   response_headers.setdefault('statusCode', 200)
   response_headers.setdefault('statusMessage', 'OK')
