@@ -10,6 +10,7 @@
   Some content
   and some more
 ";
+@var bar3;            //don't need to assign a value immediately
 
 
 

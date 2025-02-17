@@ -157,14 +157,9 @@ reservedTokens = {
   'protected': 'spArg',
 }
 
-# these tokens aren't added to the token array
-ignoreTokens = {
-  ' ',
-}
-
 # these tokens are concatted instead
 stringDelimTokens = {
-  '\'',   # start or end of a string
+  "'",   # start or end of a string
   '"',    # start or end of a string
 }
 
@@ -204,7 +199,6 @@ def tokenizeScript(script):
 
   global currentToken
   global reservedTokens
-  global ignoreTokens
   global stringDelimTokens
   global lineNumber #which line the token is on ... starts at 1
   processingStr = False   #ignore reserved tokens until the string is closed
@@ -213,7 +207,7 @@ def tokenizeScript(script):
   tokenStack.insert(0, 'scptStrt', '')
   
   # loop through entire script
-  for char in script:
+  for idx, char in enumerate(script):
     #print(currentToken, char, processingStr)
 
     #new token
@@ -229,14 +223,19 @@ def tokenizeScript(script):
       #the current token is a multi-char token that exists in reserved tokens
       #eg func, var, return, print, etc
       if currentToken in reservedTokens:
-        #print('inserted token as multi char reserved token:', reservedTokens[currentToken], currentToken)
-        tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
-        currentToken = None
-        continue
+        #the next char is a reserved token, therefore, currentToken must be a completed reserved token
+        if script[idx+1] in reservedTokens:
+          #print('inserted token as multi char reserved token:', reservedTokens[currentToken], currentToken)
+          tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
+          currentToken = None
+          continue
+
+        #the next token isn't reserved, therefore this is a user-defined generic arg such as funcCalcRadius(...){...} which begins with a normally reservedToken
+        else: continue
 
       #current token is a string
       elif processingStr:
-        if char in ignoreTokens: continue #space char already added, goto next char
+        if char == ' ': continue #space char already added, goto next char
         if char in stringDelimTokens:
           if char != currentToken[0]: continue #wrong delimiter to end string
           if currentToken[len(currentToken)-1] == '\\': continue #end string delim is escaped
@@ -246,6 +245,10 @@ def tokenizeScript(script):
             processingStr = False #string has ended
             currentToken = None   #string was stored, end token
             continue
+
+      #ADD PROCESSING HTML HERE
+      #ADD PROCESSING HTML HERE
+      #ADD PROCESSING HTML HERE
       
       #current char is a space, indicating the multi-char generic arg is over
       elif char == ' ':
@@ -280,16 +283,14 @@ def tokenizeScript(script):
 def tokenizeNewChar(char):
   global currentToken
   global reservedTokens
-  global ignoreTokens
   global stringDelimTokens
   global lineNumber #which line the token is on ... starts at 1
-  processingStr = False   #ignore reserved tokens until the string is closed
   
   currentToken = char
   if currentToken == '\n': lineNumber += 1  #increment line number where tokens are at
 
   #new char is in ignore list... skip it
-  if currentToken in ignoreTokens:
+  if currentToken == ' ':
     currentToken = None 
     return currentToken
   
