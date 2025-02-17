@@ -1,8 +1,8 @@
 import datetime
 import os
 import socket
-from wtokenizer import tokenizeScript
-from wparser import parseTokens
+from nextokenizer import tokenizeScript
+from nexParser import parseTokens
 
 
 # GLOBAL VARIABLES
@@ -16,10 +16,10 @@ response_content = None # content returned by server
 
 # IMPORT SERVER CONFIGURATION ... PARSE INTO config OBJECT
 try:
-  with open('wserver.config', 'r') as wserver_config:
+  with open('nexServer.config', 'r') as nexServer_config:
     config = {}
 
-    for line in wserver_config:
+    for line in nexServer_config:
       line = line.strip()
       if not line or line.startswith('#'): continue
       if '=' in line:
@@ -43,7 +43,7 @@ try:
           config[setting.strip()] = str(value.strip())
 
 except Exception as err:
-  print('Fatal Error: wserver.config error ... ' + str(err))
+  print('Fatal Error: nexServer.config error ... ' + str(err))
   os._exit(0)
 
 
@@ -116,14 +116,14 @@ def constructResponse():
   global response_content
 
 
-  # TOKENIZE AND PARSE W-LANG FILES ... begin with _onStart.wlang
-  # get starting .wlang script
+  # TOKENIZE AND PARSE .NEX FILES ... begin with _onStart.nex
+  # get starting .nex script
   try:
-    scriptPath = config['library'] + '/_onStart.wlang'
+    scriptPath = config['library'] + '/_onStart.nex'
     with open(scriptPath, "r", encoding="utf-8") as file:
       response_content = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
   except:
-    print("Fatal Error: _onStart.wlang file doesn't exist in the configured library directory.")
+    print("Fatal Error: _onStart.nex file doesn't exist in the configured library directory.")
 
   # attempt tokenization
   try:
