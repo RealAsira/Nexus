@@ -1,1 +1,5 @@
-Nothing here
+@func testStr(aString(str) = "default string") {
+  @return('This is a string');
+  @return("This is string 'also'");
+  @return("This would throw error in parser');
+}
