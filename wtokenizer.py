@@ -1,212 +1,183 @@
 """
-TOKENIZER/LEXER CREATES "TOKENS" FROM SCRIPT
-
-// example...
-@func add (num1(int, float), num2(int, float)) {
-  @print('goodnight sky');
-}
-
-/*expected token output
-
-@               -expression start
-func            -expression pointer
-add             -expression name  (technically an arg)
-(               -args start
-num1            -arg
-int             -type
-float           -type
-num2            -arg
-int             -type
-float           -type
-)               -args end
-{               -definition start
-@               -expression start
-print           -expression pointer
-'goodnight sky' -arg
-;               -expression end
-}               -definition end
-(newline)       -expression end
-
-*/
+TOKENIZER/LEXER CREATES "TOKENS" FROM A SCRIPT
 """
 
 
-
-
+#which line the token is on ... starts at 1
+lineNumber = 1
 
 # TOKENS RESERVED BY THE LANGUAGE
 currentToken = None
 reservedTokens = {
-    # Misc
-    ' ': 'whitespace',
-    '\n': 'newline',
-    '\\': 'escNext',      #single \ to escape next char
-    '//': 'lnComment',    #single line comment
-    '/*': 'commentStart', #multi-line comment
-    '*/': 'commentEnd',
+  # Misc
+  ' ': 'whitespace',
+  '\n': 'nl',
+  '\\': 'escNxt',   #single \ to escape next char
+  '#': 'lnCmt',    #single line comment
+  '/*': 'cmtStrt',  #multi-line comment
+  '*/': 'cmtEnd',
 
-    # Expression
-    '@': 'exprStart',     #special char to start expr
-    ';': 'exprEnd',       #ends expr immediately
-    ',': 'exprDelim',     #delims args in expr
-    '.': 'methStart',     #start of a method (ie @bar.kill() where kill is method)
+  # Expression
+  '@': 'exprStrt',    #special char to start expr
+  ';': 'exprEnd',     #ends expr immediately
+  ',': 'exprDlm',     #delims args in expr
+  '.': 'methStrt',    #start of a method (ie @bar.kill() where kill is method)
 
-    # Structure
-    '(': 'parenOpen',     #used for args
-    ')': 'parenClose',  
-    '{': 'braceOpen',     #use for defs
-    '}': 'braceClose',  
-    '[': 'bracketOpen',   #used for data
-    ']': 'bracketClose',
+  # Structure
+  '(': 'parenOpn',    #used for args
+  ')': 'parenCls',  
+  '{': 'braceOpn',    #used for defs
+  '}': 'braceCls',  
+  '[': 'bracketOpn',  #used for data
+  ']': 'bracketCls',
+  '\'': 'apos',       #used for strings
+  '"': 'quote',       #used for strings
 
-    # Comparison
-    '<': 'lsThan',      
-    '>': 'gtThan',
-    '>=': 'gtThanEqTo',
-    '<=': 'lsThanEqTo',
-    '==': 'eqTo',             #compare
-    '!==': 'notEqTo',         #compare NOT
-    '===': 'eqToStrict',      #compare strict
-    '!===': 'notEqToStrict',  #comapre strict NOT
+  # Comparison
+  '<': 'lsThan',      
+  '>': 'gtThan',
+  '>=': 'gtThanEqTo',
+  '<=': 'lsThanEqTo',
+  '==': 'eqTo',             #compare
+  '!==': 'notEqTo',         #compare NOT
+  '===': 'eqToStrict',      #compare strict
+  '!===': 'notEqToStrict',  #comapre strict NOT
 
-    # Binary Comparison
-    '!': 'binCompare',               #NOT - eval to inverse
-    '&&': 'binCompare',              #AND - both in comparison eval to true
-    #NAND = !(var1 && var 2)  #NAND - intentionally excluded for simplicity
-    '||': 'binCompare',               #OR - either in comparison eval to true
-    #NOR = !(var1 || var 2)   #NOR - intentionally excluded for simplicity
-    'x||': 'binCompare',             #XOR - both in comparison are different
-    #XNOR = !(var1 x|| var 2) #XNOR -intentionally excluded for simplicity
+  # Binary Comparison
+  '!': 'binCmpr',               #NOT - eval to inverse
+  '&&': 'binCmpr',              #AND - both in comparison eval to true
+  #NAND = !(var1 && var 2)  #NAND - intentionally excluded for simplicity
+  '||': 'binCmpr',               #OR - either in comparison eval to true
+  #NOR = !(var1 || var 2)   #NOR - intentionally excluded for simplicity
+  'x||': 'binCmpr',             #XOR - both in comparison are different
+  #XNOR = !(var1 x|| var 2) #XNOR -intentionally excluded for simplicity
 
-    # Binary-ish Comparison
-    'all': 'expr',       #@all() - ie several chained &&    
-    'any': 'reference',       #several chained ||
-    'either': 'reference',    #like any but only two expressions
-    'none': 'reference',      #!(@any)
-    'neither': 'reference',   #like none but only two expressions
-    'not': 'reference',       #same as !() but as reference
-    'iv': 'reference',        #value is non-null, non-blank
-    'nv': 'reference',        #value is null or blank
+  # Binary-ish Comparison
+  'all': 'ref',       #@all() - ie several chained &&    
+  'any': 'ref',       #several chained ||
+  'either': 'ref',    #like any but only two expressions
+  'none': 'ref',      #!(@any)
+  'neither': 'ref',   #like none but only two expressions
+  'not': 'ref',       #same as !() but as reference
+  'iv': 'ref',        #value is non-null, non-blank
+  'nv': 'ref',        #value is null or blank
 
-    # Operators
-    '+': 'operator',    
-    '-': 'operator',    
-    '*': 'operator',    
-    '/': 'operator',    
-    '**': 'operator',   #power
-    '//': 'operator',   #root
-    '%': 'operator',    #modulo
-    '+=': 'operator',   
-    '-=': 'operator',   
-    '*=': 'operator',   
-    '/=': 'operator',   
-    '=': 'operator',    #assign
+  # Operators
+  '+': 'op',    
+  '-': 'op',    
+  '*': 'op',    
+  '/': 'op',    
+  '**': 'op',   #power
+  '//': 'op',   #root
+  '%': 'op',    #modulo
+  '+=': 'op',   
+  '-=': 'op',   
+  '*=': 'op',   
+  '/=': 'op',   
+  '=': 'op',    #assign
 
-    # Keywords (reserved references)
-    'abort': 'reference',   #kill entire response w/o sending anything
-    'stop': 'reference',    #stop further addition to response... parse it and send
-    'cookie': 'reference',    #assign a cookie to client
-    'httpGET': 'reference',   #try to get data from somewhere
-    'httpPOST': 'reference',  #post something somewhere
-    'output': 'reference',    #sets the current output value
-    'wait': 'reference',      #
+  # Keywords (reserved references)
+  'abort': 'ref',     #kill entire response w/o sending anything
+  'stop': 'ref',      #stop further addition to response... parse it and send
+  'cookie': 'ref',    #assign a cookie to client
+  'httpGET': 'ref',   #try to get data from somewhere
+  'httpPOST': 'ref',  #post something somewhere
+  'output': 'ref',    #sets the current output value
+  'sleep': 'ref',     #sleep? should this be in lang?
+  'wait': 'ref',      #wait? should this be in lang?
 
-    'response_header': 'reference',
-    'response_redirect': 'reference',
+  'rspns_header': 'ref',
+  'rspns_redir': 'ref',
 
-    'calc': 'reference',
-    'min': 'reference',
-    'max': 'reference',
+  'calc': 'ref',
+  'min': 'ref',
+  'max': 'ref',
 
-    'chr': 'reference',
-    'ord': 'reference',
+  'chr': 'ref',
+  'ord': 'ref',
 
-    'date': 'reference',    #@date(12/25/2025 13:05:17:999) returns date as float ... @now() if no arg
-    'now': 'reference',     #datetime right now as float
-    'today': 'reference',   #date with 00:00:00 time as float
+  'date': 'ref',    #@date(12/25/2025 13:05:17:999) returns date as float ... @now() if no arg
+  'now': 'ref',     #datetime right now as float
+  'today': 'ref',   #date with 00:00:00 time as float
 
-    'guid': 'reference',    #returns global identifier string
-    'random': 'reference',  #@random(967) returns int 0-967 ... @random(451.07) returns float 0.00-451.07 
+  'guid': 'ref',    #returns global identifier string
+  'random': 'ref',  #@random(967) returns int 0-967 ... @random(451.07) returns float 0.00-451.07 
 
-    'func': 'reference',
-    'getglobal': 'reference', #gets a module level or global var for the function
-    'print': 'reference',
-    'return': 'reference',
+  'func': 'ref',
+  'getglobal': 'ref', #gets a module level or global var for the function
+  'print': 'ref',
+  'return': 'ref',
 
-    'type': 'reference',
-    'class': 'reference',
-    'object': 'reference',
-    'this': 'reference',
-    'self': 'reference',
+  'type': 'ref',
+  'class': 'ref',
+  'object': 'ref',
+  'this': 'ref',
+  'self': 'ref',
 
-    'library': 'reference',
-    'mode': 'reference',
-    'module': 'reference',
+  'library': 'ref',
+  'mode': 'ref',
+  'module': 'ref',
 
-    'if': 'reference',
-    'ifTrue': 'reference',
-    'ifFalse': 'reference',
-    'switch': 'reference',
-    'when': 'reference',
-    'else': 'reference',
+  'if': 'ref',        #ternary
+  'ifTrue': 'ref',    #execute def if expr evals to true
+  'ifFalse': 'ref',   #execute def if expr evals to false
+  'switch': 'ref',    #switch block
+  'when': 'ref',      #when the expr in switch evals to this
+  'else': 'ref',      #when the expr in switch evals to none of the whens
 
-    'const': 'reference',
-    'global': 'reference',    #makes a variable or const accessible across all modules
-    'var': 'reference',
+  'const': 'ref',     #immutable, non-reassignable var
+  'global': 'ref',    #makes a variable or const accessible across all modules
+  'var': 'ref',       #mutable unless type explicitly stated in declaration
 
-    # Types
-    'blank': 'type',    #value is "empty" or "blank"
-    'null': 'type',     #has no value, not even blank
-    'variant': 'type',  #a generic type that will attempt to determine the actual type when called
+  # Types
+  'blank': 'type',    #value is "empty" or "blank"
+  'null': 'type',     #has no value, not even blank
+  'variant': 'type',  #a generic type that will attempt to determine the actual type when called
+  'str': 'type',
     
-    'array': 'type',      #data structure array
-    'dict': 'type',       #data structure dictionary
-    'reference': 'type',  #points to another expression
+  'array': 'type',      #data structure array
+  'dict': 'type',       #data structure dictionary
+  'reference': 'type',  #points to another expression
     
-    'bool': 'type',
-    'datetime': 'type',
-    'int': 'type',      #trunc decimals to make whole number
-    'float': 'type',
-    'double': 'type',   #subtype of float... currently no difference)
-    'money': 'type',    #subtype of float... returns 0.00 format
+  'bool': 'type',
+  'datetime': 'type',
+  'int': 'type',      #trunc decimals to make whole number
+  'float': 'type',
+  'double': 'type',   #subtype of float... currently no difference)
+  'money': 'type',    #subtype of float... returns 0.00 format
 
-    'base64': 'type',   #encoded data in base64
-    'binary': 'type',   #encoded data in binary
-    'hex': 'type',      #encoded data in hex
-    'utf8': 'type',     #encoded data in UTF8
+  'base64': 'type',   #encoded data in base64
+  'binary': 'type',   #encoded data in binary
+  'hex': 'type',      #encoded data in hex
+  'utf8': 'type',     #encoded data in UTF8
     
-    # Special Args (args to modify behavior of expression)
-    'disable': 'spArg',
-    'nointerpret': 'spArg',
-    'protected': 'spArg',
+  # Special Args (args to modify behavior of expression)
+  'disable': 'spArg',
+  'nointerpret': 'spArg',
+  'protected': 'spArg',
 }
 
-ignoreTokens = {
-    ' ',
+# these tokens are concatted instead
+stringDelimTokens = {
+  "'",   # start or end of a string
+  '"',    # start or end of a string
 }
 
 
-"""
-TO DO
-If  _<_ (_ replaces ' ' here) then this is chevron ...
-If _<alpha then part of string (HTML) <htah />
 
-If _> then chevron
-If /> then part of string (HTML)
-"""
 
 
 # tokenStack is where all the tokens are stored during the tokenization phase
 class tokenStack:
   def __init__(self):
-    # [[tokenType, tokenValue], [tokenType, tokenValue] ...]
+    # [[lineNumber, tokenType, tokenValue], [tokenType, tokenValue] ...]
     self.stack = []              
     #print('created token stack')
 
   # add a token to end of the stack
-  def insert(self, tokenType, tokenValue = 'noVal'):
+  def insert(self, lineNumber, tokenType, tokenValue):
     #print('stored token', tokenType, tokenValue.replace(' ', '_'))
-    self.stack.insert(len(self.stack), [tokenType.strip(), tokenValue.strip()])
+    self.stack.insert(len(self.stack), [int(lineNumber), tokenType.strip(), tokenValue.strip()])
     return
   
   # remove the first token from the stack
@@ -223,41 +194,85 @@ tokenStack = tokenStack()
 
 
 
-# TOKENIZE .wlang SCRIPTS INTO COMMAND STACK
 def tokenizeScript(script):
-  global reservedTokens
-  global currentToken
-
   print(script, '\n\n\n')
+
+  global currentToken
+  global reservedTokens
+  global stringDelimTokens
+  global lineNumber #which line the token is on ... starts at 1
+  processingStr = False   #ignore reserved tokens until the string is closed
+
+  #insert a token indicating the start of a tokenized script
+  tokenStack.insert(0, 'scptStrt', '')
   
   # loop through entire script
-  for char in script:
-    #print(char.replace(' ', '_'), str(currentToken).replace(' ', '_'))
+  for idx, char in enumerate(script):
+    #print(currentToken, char, processingStr)
 
-    # multi-character token
-    if currentToken is not None:
-      currentToken = str(currentToken) + str(char)
-      
-      # characters or strings such as @, {}, (), ;, func, var, etc... used for syntax structure
-      if currentToken in reservedTokens:
-        #print('1', reservedTokens[currentToken], currentToken.replace(' ', '_'))
-        tokenStack.insert(reservedTokens[currentToken], currentToken)
-        currentToken = None
-
-      # character is reserved, therefore the token is complete and is an arg
-      if (char in reservedTokens):
-        #print('2', 'arg', currentToken[0:(len(currentToken)-1)].replace(' ', '_'))
-        tokenStack.insert('arg', currentToken[0:(len(currentToken)-1)])
-        
-        # because the previous token was ended by a reserved character, a new token is starting and needs to be processed
-        currentToken = tokenizeNewChar(char)
-
-
-    # a brand new token to process
-    elif currentToken is None:
+    #new token
+    if currentToken is None:
       currentToken = tokenizeNewChar(char)
+      if currentToken in stringDelimTokens: processingStr = True  #now processing a string
+      continue
 
-  print("Token Stack:\n")
+    #multi-char token
+    elif currentToken is not None:
+      currentToken = str(currentToken) + str(char)  #append new char
+
+      #the current token is a multi-char token that exists in reserved tokens
+      #eg func, var, return, print, etc
+      if currentToken in reservedTokens:
+        #the next char is a reserved token, therefore, currentToken must be a completed reserved token
+        if script[idx+1] in reservedTokens:
+          #print('inserted token as multi char reserved token:', reservedTokens[currentToken], currentToken)
+          tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
+          currentToken = None
+          continue
+
+        #the next token isn't reserved, therefore this is a user-defined generic arg such as funcCalcRadius(...){...} which begins with a normally reservedToken
+        else: continue
+
+      #current token is a string
+      elif processingStr:
+        if char == ' ': continue #space char already added, goto next char
+        if char in stringDelimTokens:
+          if char != currentToken[0]: continue #wrong delimiter to end string
+          if currentToken[len(currentToken)-1] == '\\': continue #end string delim is escaped
+          else: #store string
+            #print('inserted token as string:', currentToken)
+            tokenStack.insert(lineNumber, 'arg', currentToken)
+            processingStr = False #string has ended
+            currentToken = None   #string was stored, end token
+            continue
+
+      #ADD PROCESSING HTML HERE
+      #ADD PROCESSING HTML HERE
+      #ADD PROCESSING HTML HERE
+      
+      #current char is a space, indicating the multi-char generic arg is over
+      elif char == ' ':
+        #print('inserted token as generic arg:', currentToken)
+        tokenStack.insert(lineNumber, 'arg', currentToken[0:len(currentToken)-1])
+        
+        #start new token because previous was just ended
+        currentToken = tokenizeNewChar(char)
+        if currentToken in stringDelimTokens: processingStr = True  #now processing a string
+        continue
+
+      #the current char is a reserved token, this indicates end of current token and start of a new one
+      elif char in reservedTokens:
+        tokenStack.insert(lineNumber, 'arg', currentToken[0:(len(currentToken)-1)])
+        currentToken = tokenizeNewChar(char)
+        if currentToken in stringDelimTokens: processingStr = True #a string has started
+
+      else: continue #character was appended to token
+
+  #insert a token indicating the end of a script
+  #len statement gets last token's line number, adds one
+  tokenStack.insert(tokenStack.stack[len(tokenStack.stack)-1][0]+1, 'scptEnd', '')
+  
+  print("TOKEN STACK:\n")
   for item in tokenStack.stack:
     print(item)
 
@@ -265,20 +280,34 @@ def tokenizeScript(script):
 
 
 
-# START OF A NEW TOKEN
 def tokenizeNewChar(char):
-  global reservedTokens
   global currentToken
-
+  global reservedTokens
+  global stringDelimTokens
+  global lineNumber #which line the token is on ... starts at 1
+  
   currentToken = char
-  # add reserved token, unless it should be ignored (such as white space, delimiters, newlines)
-  if (currentToken in reservedTokens) and (currentToken not in ignoreTokens):
-    #print('3', reservedTokens[currentToken], currentToken.replace(' ', '_'))
-    tokenStack.insert(reservedTokens[currentToken], currentToken)
-    currentToken = None
+  if currentToken == '\n': lineNumber += 1  #increment line number where tokens are at
 
-  # this line ensures whitespace is not part of other tokens (such as arg tokens)
-  if currentToken in ignoreTokens:
-    currentToken = None
-
-  return currentToken
+  #new char is in ignore list... skip it
+  if currentToken == ' ':
+    currentToken = None 
+    return currentToken
+  
+  #new char starts non-reserved token of type "arg"
+  if currentToken not in reservedTokens:
+    return currentToken
+  
+  #new char is a reserved token in and of itself
+  if currentToken in reservedTokens:
+    if currentToken in stringDelimTokens: return currentToken #start of a string
+    #ADD HTML vs COMPARISON TOKENS HERE
+    #ADD HTML vs COMPARISON TOKENS HERE
+    #ADD HTML vs COMPARISON TOKENS HERE
+    
+    # all possible special conditions (strings, html, etc) have been tested already... this is simply a reserved token and nothing more
+    else:
+      #print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
+      tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
+      currentToken = None
+      return currentToken
