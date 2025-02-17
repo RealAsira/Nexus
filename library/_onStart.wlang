@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 @func testStr(aString(str) = "default string") {
+=======
+@func funcTestStr(aString(str) = "default string") {
+>>>>>>> dev
   @return('This is a string');
   @return("This is string 'also'");
   @return("This would throw error in parser');
