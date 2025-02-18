@@ -1,5 +1,4 @@
-@func funcTestStr(aString(str) = "default string") {
-  @return('This is a string');
-  @return("This is string 'also'");
-  @return("This would throw error in parser');
-}
+@var url = "https://example.com/favico.ico"
+<img src="@url" alt="site icon"/>
+<p>@url</p>
+<@url>
