@@ -159,8 +159,19 @@ reservedTokens = {
 
 # these tokens are concatted instead
 stringDelimTokens = {
-  "'",   # start or end of a string
-  '"',    # start or end of a string
+  "'",  # start or end of a string
+  '"',
+}
+
+# these tokens require additional processing to determine if they are comparison operators or xml/html
+xmlDelimTokens = {
+  '<',  # possible xml open-tag start
+  '>',  # possible xml open-tag end
+  '/>', # xml open-tag self-close
+  '/',  # first char in /> ... 
+  '</', # xml close-tag start
+  #<p>...</p>
+  #<img .../>
 }
 
 
@@ -194,7 +205,7 @@ tokenStack = tokenStack()
 
 
 
-def tokenizeScript(script):
+def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
   print(script, '\n\n\n')
 
   global currentToken
@@ -202,6 +213,7 @@ def tokenizeScript(script):
   global stringDelimTokens
   global lineNumber #which line the token is on ... starts at 1
   processingStr = False   #ignore reserved tokens until the string is closed
+  processingXML = False   #
 
   #insert a token indicating the start of a tokenized script
   tokenStack.insert(0, 'scptStrt', '')
@@ -213,55 +225,98 @@ def tokenizeScript(script):
     #new token
     if currentToken is None:
       currentToken = tokenizeNewChar(char)
-      if currentToken in stringDelimTokens: processingStr = True  #now processing a string
+      if currentToken in stringDelimTokens: processingStr = True                                      #now processing a string
+
+      #is XML being processed?
+      if currentToken in xmlDelimTokens:
+        if script[idx+1] not in reservedTokens: processingXML = True  #next char isn't reserved... indicates xml tag name
+        if script[idx+1] == '/': processingXML = True                 # testing for </ (xml close tag)
       continue
 
-    #multi-char token
-    elif currentToken is not None:
-      currentToken = str(currentToken) + str(char)  #append new char
 
+    #multi-char token (token is not new)
+    elif currentToken is not None:
+      
+      #special pre-process for XML
+      if processingXML:
+        # processed /> and </ before < and > because 
+        # < and > may insert token because /> and </ aren't seen by them
+
+        # appending to test /> (xml open-tag self-end)
+        if (str(currentToken) + str(char) == '/>'):
+          print('inserted token as xml open-tag self-end', 'xmlSlfEnd', (str(currentToken) + str(char)))
+          tokenStack.insert(lineNumber, 'xmlSlfEnd', (str(currentToken) + str(char)))
+          processingXML = False # end of the tag
+          currentToken = None # the current char was processed with this one... end
+          continue
+        
+        #appending to test </ (xml close-tag start)
+        elif (str(currentToken) + str(char) == '</'):
+          print('inserted token as xml close-tag start', 'xmlClsStrt', (str(currentToken) + str(char)))
+          tokenStack.insert(lineNumber, 'xmlClsStrt', (str(currentToken) + str(char)))
+          currentToken = None # the current char was processed with this one... end
+          continue
+
+        # xml open-tag start ... insert < as xmlOpnStrt
+        elif currentToken == '<':
+          print('inserted token as xml open-tag start', 'xmlOpnStrt', currentToken)
+          tokenStack.insert(lineNumber, 'xmlOpnStrt', currentToken)
+          currentToken = tokenizeNewChar(char)  # since < was stored, start new token
+          continue
+
+        # xml tag end ... insert > as xmlTagEnd (since > ends both open and close)
+        elif currentToken == '>':
+          print('inserted token as xml tag end', 'xmlTagEnd', currentToken)
+          tokenStack.insert(lineNumber, 'xmlTagEnd', currentToken)
+          processingXML = False                 # end of the tag
+          currentToken = tokenizeNewChar(char)  # since > was stored, start new token
+          continue
+
+
+      # < and > and / are always returned by tokenizeNewChar in case they are xml
+      # therefore, they need to be inserted into the stack now if they aren't xml
+      # otherwise, they'll be added as generic args instead of operators
+      if currentToken in ['<', '>', '/'] and not processingXML:
+        print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
+        tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
+        currentToken = tokenizeNewChar(char)
+        continue
+
+
+      #process script like normal
+      currentToken = str(currentToken) + str(char)  #append new char
+      
       #the current token is a multi-char token that exists in reserved tokens
       #eg func, var, return, print, etc
       if currentToken in reservedTokens:
+
         #the next char is a reserved token, therefore, currentToken must be a completed reserved token
         if script[idx+1] in reservedTokens:
-          #print('inserted token as multi char reserved token:', reservedTokens[currentToken], currentToken)
+          print('inserted token as multi char reserved token:', reservedTokens[currentToken], currentToken)
           tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
           currentToken = None
           continue
-
         #the next token isn't reserved, therefore this is a user-defined generic arg such as funcCalcRadius(...){...} which begins with a normally reservedToken
         else: continue
+
 
       #current token is a string
       elif processingStr:
         if char == ' ': continue #space char already added, goto next char
         if char in stringDelimTokens:
-          if char != currentToken[0]: continue #wrong delimiter to end string
-          if currentToken[len(currentToken)-1] == '\\': continue #end string delim is escaped
+          if char != currentToken[0]: continue                    #wrong delimiter to end string
+          if currentToken[len(currentToken)-1] == '\\': continue  #end string delim is escaped
           else: #store string
-            #print('inserted token as string:', currentToken)
+            print('inserted token as string:', currentToken)
             tokenStack.insert(lineNumber, 'arg', currentToken)
             processingStr = False #string has ended
             currentToken = None   #string was stored, end token
             continue
-
-      #ADD PROCESSING HTML HERE
-      #ADD PROCESSING HTML HERE
-      #ADD PROCESSING HTML HERE
-      
-      #current char is a space, indicating the multi-char generic arg is over
-      elif char == ' ':
-        #print('inserted token as generic arg:', currentToken)
-        tokenStack.insert(lineNumber, 'arg', currentToken[0:len(currentToken)-1])
-        
-        #start new token because previous was just ended
-        currentToken = tokenizeNewChar(char)
-        if currentToken in stringDelimTokens: processingStr = True  #now processing a string
-        continue
+          
 
       #the current char is a reserved token, this indicates end of current token and start of a new one
       elif char in reservedTokens:
+        print('inserted token as generic arg:', currentToken[0:(len(currentToken)-1)])
         tokenStack.insert(lineNumber, 'arg', currentToken[0:(len(currentToken)-1)])
         currentToken = tokenizeNewChar(char)
         if currentToken in stringDelimTokens: processingStr = True #a string has started
@@ -284,6 +339,7 @@ def tokenizeNewChar(char):
   global currentToken
   global reservedTokens
   global stringDelimTokens
+  global xmlDelimTokens
   global lineNumber #which line the token is on ... starts at 1
   
   currentToken = char
@@ -301,13 +357,17 @@ def tokenizeNewChar(char):
   #new char is a reserved token in and of itself
   if currentToken in reservedTokens:
     if currentToken in stringDelimTokens: return currentToken #start of a string
-    #ADD HTML vs COMPARISON TOKENS HERE
-    #ADD HTML vs COMPARISON TOKENS HERE
-    #ADD HTML vs COMPARISON TOKENS HERE
-    
+    if currentToken in xmlDelimTokens: return currentToken #possible start of XML tag ... if next char is space then comparison; otherwise xml
     # all possible special conditions (strings, html, etc) have been tested already... this is simply a reserved token and nothing more
     else:
-      #print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
+      print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
       tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
       currentToken = None
       return currentToken
+
+
+
+
+
+def isXML():
+  ...
