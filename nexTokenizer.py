@@ -220,7 +220,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
   
   # loop through entire script
   for idx, char in enumerate(script):
-    #print(currentToken, char, processingStr)
+    print(currentToken, char, processingStr)
 
     #new token
     if currentToken is None:
@@ -322,6 +322,14 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
         if currentToken in stringDelimTokens: processingStr = True #a string has started
 
       else: continue #character was appended to token
+
+  # these tokens are processed with the next iteration of the for loop.
+  # However, since the for loop is terminated, if this token isn't processed it still needs to be...
+  if currentToken is not None and currentToken in xmlDelimTokens:
+    print('inserted final token as single char reserved token:', currentToken)
+    tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
+    currentToken = None
+    #no "continue" since this is after the for loop
 
   #insert a token indicating the end of a script
   #len statement gets last token's line number, adds one
