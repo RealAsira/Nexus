@@ -1,4 +1,1 @@
-@var url = "https://example.com/favico.ico"
-<img src="@url" alt="site icon"/>
-<p>@url</p>
-<@url>
+<p>Goodnight sky!</p>
