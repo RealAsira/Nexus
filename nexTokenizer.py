@@ -206,7 +206,7 @@ tokenStack = tokenStack()
 
 
 def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
-  print(script, '\n\n\n')
+  #print(script, '\n\n\n')
 
   global currentToken
   global reservedTokens
@@ -220,7 +220,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
   
   # loop through entire script
   for idx, char in enumerate(script):
-    print(currentToken, char, processingStr)
+    #print(currentToken, char, processingStr)
 
     #new token
     if currentToken is None:
@@ -244,7 +244,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
 
         # appending to test /> (xml open-tag self-end)
         if (str(currentToken) + str(char) == '/>'):
-          print('inserted token as xml open-tag self-end', 'xmlSlfEnd', (str(currentToken) + str(char)))
+          #print('inserted token as xml open-tag self-end', 'xmlSlfEnd', (str(currentToken) + str(char)))
           tokenStack.insert(lineNumber, 'xmlSlfEnd', (str(currentToken) + str(char)))
           processingXML = False # end of the tag
           currentToken = None # the current char was processed with this one... end
@@ -252,21 +252,21 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
         
         #appending to test </ (xml close-tag start)
         elif (str(currentToken) + str(char) == '</'):
-          print('inserted token as xml close-tag start', 'xmlClsStrt', (str(currentToken) + str(char)))
+          #print('inserted token as xml close-tag start', 'xmlClsStrt', (str(currentToken) + str(char)))
           tokenStack.insert(lineNumber, 'xmlClsStrt', (str(currentToken) + str(char)))
           currentToken = None # the current char was processed with this one... end
           continue
 
         # xml open-tag start ... insert < as xmlOpnStrt
         elif currentToken == '<':
-          print('inserted token as xml open-tag start', 'xmlOpnStrt', currentToken)
+          #print('inserted token as xml open-tag start', 'xmlOpnStrt', currentToken)
           tokenStack.insert(lineNumber, 'xmlOpnStrt', currentToken)
           currentToken = tokenizeNewChar(char)  # since < was stored, start new token
           continue
 
         # xml tag end ... insert > as xmlTagEnd (since > ends both open and close)
         elif currentToken == '>':
-          print('inserted token as xml tag end', 'xmlTagEnd', currentToken)
+          #print('inserted token as xml tag end', 'xmlTagEnd', currentToken)
           tokenStack.insert(lineNumber, 'xmlTagEnd', currentToken)
           processingXML = False                 # end of the tag
           currentToken = tokenizeNewChar(char)  # since > was stored, start new token
@@ -277,7 +277,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
       # therefore, they need to be inserted into the stack now if they aren't xml
       # otherwise, they'll be added as generic args instead of operators
       if currentToken in ['<', '>', '/'] and not processingXML:
-        print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
+        #print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
         tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
         currentToken = tokenizeNewChar(char)
         continue
@@ -292,7 +292,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
 
         #the next char is a reserved token, therefore, currentToken must be a completed reserved token
         if script[idx+1] in reservedTokens:
-          print('inserted token as multi char reserved token:', reservedTokens[currentToken], currentToken)
+          #print('inserted token as multi char reserved token:', reservedTokens[currentToken], currentToken)
           tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
           currentToken = None
           continue
@@ -307,7 +307,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
           if char != currentToken[0]: continue                    #wrong delimiter to end string
           if currentToken[len(currentToken)-1] == '\\': continue  #end string delim is escaped
           else: #store string
-            print('inserted token as string:', currentToken)
+            #print('inserted token as string:', currentToken)
             tokenStack.insert(lineNumber, 'arg', currentToken)
             processingStr = False #string has ended
             currentToken = None   #string was stored, end token
@@ -316,7 +316,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
 
       #the current char is a reserved token, this indicates end of current token and start of a new one
       elif char in reservedTokens:
-        print('inserted token as generic arg:', currentToken[0:(len(currentToken)-1)])
+        #print('inserted token as generic arg:', currentToken[0:(len(currentToken)-1)])
         tokenStack.insert(lineNumber, 'arg', currentToken[0:(len(currentToken)-1)])
         currentToken = tokenizeNewChar(char)
         if currentToken in stringDelimTokens: processingStr = True #a string has started
@@ -326,7 +326,7 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
   # these tokens are processed with the next iteration of the for loop.
   # However, since the for loop is terminated, if this token isn't processed it still needs to be...
   if currentToken is not None and currentToken in xmlDelimTokens:
-    print('inserted final token as single char reserved token:', currentToken)
+    #print('inserted final token as single char reserved token:', currentToken)
     tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
     currentToken = None
     #no "continue" since this is after the for loop
@@ -335,9 +335,9 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
   #len statement gets last token's line number, adds one
   tokenStack.insert(tokenStack.stack[len(tokenStack.stack)-1][0]+1, 'scptEnd', '')
   
-  print("TOKEN STACK:\n")
-  for item in tokenStack.stack:
-    print(item)
+  #print("TOKEN STACK:\n")
+  #for item in tokenStack.stack:
+  #  print(item)
 
 
 
@@ -368,7 +368,7 @@ def tokenizeNewChar(char):
     if currentToken in xmlDelimTokens: return currentToken #possible start of XML tag ... if next char is space then comparison; otherwise xml
     # all possible special conditions (strings, html, etc) have been tested already... this is simply a reserved token and nothing more
     else:
-      print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
+      #print('inserted token as single char reserved token:', reservedTokens[currentToken], currentToken)
       tokenStack.insert(lineNumber, reservedTokens[currentToken], currentToken)
       currentToken = None
       return currentToken
