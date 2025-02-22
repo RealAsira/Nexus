@@ -132,7 +132,7 @@ def constructResponse() -> bytes:
     with open(scriptPath, "r", encoding="utf-8") as file:
       response_content = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
   except:
-    print("Fatal Error: _onStart.nex file doesn't exist in the configured library directory.")
+    print(f"Fatal Error: _onStart.nex file doesn't exist in the configured library directory.")
 
   # attempt tokenization
   try:
@@ -142,9 +142,9 @@ def constructResponse() -> bytes:
     try:
       AST = parseTokens(tokens)
     except Exception as err:
-      print('Fatal Error: Could not parse tokens into nodal-AST ... Error: ' + str(err))
+      print(f"Fatal Error: Could not parse tokens into nodal-AST ... Error: {str(err)}")
   except Exception as err:
-    print('Fatal Error: Could not tokenize script ' + str(response_content) + ' ... Error: ' + str(err))
+    print(f"Fatal Error: Could not tokenize script ... Error: {str(err)}")
   
   # set default headers
   response_headers.setdefault('statusCode', 200)
