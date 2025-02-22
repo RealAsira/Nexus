@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import os
 import socket
-from nexTokenizer import tokenizeScript
+from nexTokenizer2 import tokenizeScript
 from nexParser import parseTokens
 
 
