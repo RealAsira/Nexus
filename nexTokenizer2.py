@@ -2,6 +2,19 @@
 TOKENIZER/LEXER CREATES "TOKENS" FROM A SCRIPT
 """
 
+
+
+
+
+# custom message for tokenizer errors
+class customErr(Exception):
+  def __init__(self,msg):
+    super().__init__(msg)
+
+
+
+
+
 # reserved symbols and keywords in the language
 reservedTokens = {
   # Misc
@@ -16,7 +29,7 @@ reservedTokens = {
   '@': 'exprStrt',    #special char to start expr
   ';': 'exprEnd',     #ends expr immediately
   ',': 'exprDlm',     #delims args in expr
-  '.': 'methStrt',    #start of a method (ie @bar.kill() where kill is method)
+  '.': 'methStrt',    #start of a method (ie @bar.destroy() where destroy is method)
 
   # Structure
   '(': 'parenOpn',    #used for args
@@ -24,9 +37,9 @@ reservedTokens = {
   '{': 'braceOpn',    #used for defs
   '}': 'braceCls',  
   '[': 'bracketOpn',  #used for data
-  ']': 'bracketCls',
-  '\'': 'apos',       #used for strings
-  '"': 'quote',       #used for strings
+  ']': 'bracketCls',  
+  '"': 'quote',       #used for strings .. yes, they need to be stored here too
+  "'": 'apos',
 
   # Comparison
   '<': 'lsThan',      
@@ -73,7 +86,7 @@ reservedTokens = {
 
   # Keywords (reserved references)
   'abort': 'ref',     #kill entire response w/o sending anything
-  'stop': 'ref',      #stop further addition to response... parse it and send
+  'stop': 'ref',      #stop further addition to response.. parse it and send
   'cookie': 'ref',    #assign a cookie to client
   'httpGET': 'ref',   #try to get data from somewhere
   'httpPOST': 'ref',  #post something somewhere
@@ -91,12 +104,12 @@ reservedTokens = {
   'chr': 'ref',
   'ord': 'ref',
 
-  'date': 'ref',    #@date(12/25/2025 13:05:17:999) returns date as float ... @now() if no arg
+  'date': 'ref',    #@date(12/25/2025 13:05:17:999) returns date as float .. @now() if no arg
   'now': 'ref',     #datetime right now as float
   'today': 'ref',   #date with 00:00:00 time as float
 
   'guid': 'ref',    #returns global identifier string
-  'random': 'ref',  #@random(967) returns int 0-967 ... @random(451.07) returns float 0.00-451.07 
+  'random': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
 
   'func': 'ref',
   'getglobal': 'ref', #gets a module level or global var for the function
@@ -138,8 +151,8 @@ reservedTokens = {
   'datetime': 'type',
   'int': 'type',      #trunc decimals to make whole number
   'float': 'type',
-  'double': 'type',   #subtype of float... currently no difference)
-  'money': 'type',    #subtype of float... returns 0.00 format
+  'double': 'type',   #subtype of float.. currently no difference)
+  'money': 'type',    #subtype of float.. returns 0.00 format
 
   'base64': 'type',   #encoded data in base64
   'binary': 'type',   #encoded data in binary
@@ -163,10 +176,8 @@ xmlDelimTokens = {
   '<',  # possible xml open-tag start
   '>',  # possible xml open-tag end
   '/>', # xml open-tag self-close
-  '/',  # first char in /> ... 
+  '/',  # first char in /> ..
   '</', # xml close-tag start
-  #<p>...</p>
-  #<img .../>
 }
 
 
@@ -176,7 +187,7 @@ xmlDelimTokens = {
 # the stack all tokens are stored in
 class tokenStack:
   def __init__(self):
-    # [[lineNumber, tokenType, tokenValue], ..., ...]
+    # [[lineNumber, tokenType, tokenValue], .., ..]
     self.stack = []
 
   # add token to end of stack
@@ -192,6 +203,10 @@ class tokenStack:
   # return first token in stack
   def readCurrentToken(self):
     return self.stack[0]
+  
+  # the tokenStack is reused and needs to be cleared between uses
+  def clear(self):
+    self.stack.clear()
   
 tokenStack = tokenStack()
   
@@ -211,95 +226,168 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module"):
   currentToken = None
   tokenLineNumber = 1
   processingStr = False
+  processingStrDelim = None
   processingXML = False
 
   scriptLen = len(script) # total length of the script
   pos = 0                 # position where is being processed
+
+
+  # returns the position of the next single character token
+  def findNextReservedSingleCharToken(searchToken:str = None) -> int:
+    nonlocal script
+    nonlocal pos
+    cursor = pos
+
+    while True:
+      if cursor < scriptLen:
+
+        # searching for any reserved token
+        if not searchToken:
+          if script[cursor] in reservedTokens:
+            break # found match
+          else: cursor += 1
+
+        # searching for a specific reserved token
+        if searchToken:
+          if script[cursor] == searchToken:
+            break # found match
+          else: cursor +=1
+          
+      else:
+        cursor = scriptLen  #end of script is last char
+        break
+    
+    return cursor
+
+
 
   # gets and returns the next token
   def getToken():
     nonlocal script
     nonlocal tokenLineNumber
     nonlocal processingStr
+    nonlocal processingStrDelim
     nonlocal processingXML
-
+    
     aToken = script[pos]
     
     # new-line = inc line number
     if aToken == '\n':
       tokenLineNumber += 1
+      #print(f"a. Found token newline")
       return aToken
 
     # this is the start of a string
     elif aToken in stringDelimTokens:
-      # get entire string
-      endPos = script.find(aToken, pos + 1)
-      aToken = script[pos:endPos]
-      return aToken
+      #print(f"b. Found token {aToken}")
+
+      # currently processing a string AND end delim match start delim .. end of string
+      if processingStr and (aToken == processingStrDelim):
+        processingStr = False
+        processingStrDelim = None # no longer processing, don't store
+        return aToken
+      
+      if not processingStr:
+        processingStr = True
+        processingStrDelim = aToken
+        return aToken
+
+    # ADD XML DELIM STUFF HERE
+    # ADD XML DELIM STUFF HERE
+    # ADD XML DELIM STUFF HERE
+    # ADD XML DELIM STUFF HERE
 
     # this token is either XML or comparison
-    elif aToken in xmlDelimTokens:
-      ...#get info abt if this is comparison or xml
+    #elif aToken in xmlDelimTokens:
+    #  ..#get info abt if this is comparison or xml
 
 
     # reserved single char token (including space delim)
     elif aToken in reservedTokens:
+      #print(f"c. Found token {aToken.replace(' ', '_')}")
       return aToken
 
-    # multi-character reserved or generic arg...
+    # multi-character reserved or generic arg..
     else:
       # get entire token
-      endPos = script.find(' ', pos + 1)
-      aToken = script[pos:endPos]
+
+      if not processingStr: # simply find end of this token by getting start of next
+        endPos = findNextReservedSingleCharToken()
+        aToken = script[pos:endPos]
+
+      if processingStr:     # only certain chars should split the string
+        endPos = findNextReservedSingleCharToken('"')
+        aToken = script[pos:endPos]
+
+      #print(f"d. Found token {aToken}")
       return aToken
 
 
-  # insert a start of script token
+
+  # reset the stack and insert scptStrt
+  tokenStack.clear()
   tokenStack.insert(0, 'scptStrt', '')
 
 
 
   while True:
   # PROCESS SCRIPT INTO TOKENS
-    
-    # new token
-    if currentToken is None:
-      currentToken = getToken()
-
-      # space character delims tokens
-      if currentToken == ' ':
-        pos += 1
-        continue
-
-      # the currentToken is a reserved token and needs to be stored
-      if currentToken in reservedTokens:
-        print(f"Stored token as reserved token {reservedTokens[currentToken]} {currentToken}")
-        tokenStack.insert(tokenLineNumber, reservedTokens[currentToken], currentToken)
-        pos += len(currentToken)
-        continue
-
-      # this is a string
-      elif currentToken[0] in stringDelimTokens:
-        print(f"Stored token as string arg {currentToken}")
-        tokenStack.insert(tokenLineNumber, "arg", {currentToken})
-        pos += len(currentToken)
-        continue
-
-
-      ... # OTHER TOKEN STORE PROCEDURES
-
-      
-    pos +=1
     # full script has been processed
     if pos >= scriptLen:
       break
+    
+    # new token
+    if currentToken is None:
+      currentToken = getToken() # now that the token is found, the next step will store it
+      #print(currentToken)
 
 
+      # space character delims tokens ... doesn't get stored
+      if currentToken == ' ':
+        pos += 1
+        currentToken = None
+        continue
+
+
+      # the currentToken is a string delimiter
+      elif currentToken in stringDelimTokens:
+        # processingStr is toggled in getToken. If true, then a str just started..
+        if processingStr:
+          #print(f"Stored token as strStrt {currentToken}")
+          tokenStack.insert(tokenLineNumber, "strStrt", currentToken)
+          
+        if not processingStr:
+          #print(f"Stored token as strEnd {currentToken}")
+          tokenStack.insert(tokenLineNumber, "strEnd", currentToken)
+
+        pos += len(currentToken)
+        currentToken = None
+        continue
+
+
+      # the currentToken is a reserved token and needs to be stored
+      elif currentToken in reservedTokens:
+        #print(f"Stored token as reserved token {reservedTokens[currentToken]} {currentToken}")
+        tokenStack.insert(tokenLineNumber, reservedTokens[currentToken], currentToken)
+        pos += len(currentToken)
+        currentToken = None
+        continue
+
+
+      # generic arg token
+      else:
+        #print(f"Stored token as generic arg {currentToken}")
+        tokenStack.insert(tokenLineNumber, "arg", currentToken)
+        pos += len(currentToken)
+        currentToken = None
+        continue
 
   # insert an end of script token
-  tokenStack.insert(0, 'scptEnd', '')
+  tokenStack.insert(tokenLineNumber + 1, 'scptEnd', '')
   
   print("TOKEN STACK:\n")
   for item in tokenStack.stack:
     print(item)
-
+  
+  return (tokenStack.stack)

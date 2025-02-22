@@ -335,9 +335,9 @@ def tokenizeScript(script, scriptName = "Unknown Nexus Module"):
   #len statement gets last token's line number, adds one
   tokenStack.insert(tokenStack.stack[len(tokenStack.stack)-1][0]+1, 'scptEnd', '')
   
-  #print("TOKEN STACK:\n")
-  #for item in tokenStack.stack:
-  #  print(item)
+  print("TOKEN STACK:\n")
+  for item in tokenStack.stack:
+    print(item)
 
 
 
