@@ -1,55 +1,55 @@
-//remember... language is case insensitive
+# remember... language is case insensitive
 
 
 
-//variables
-@var bar(int) = 0;    //immutable type... val can change
-@bar = 5;             //change value
-@var bar2 = 5;        //mutable type... val can change
-@var aString = "      //multi-line strings are allowed
+# variables
+@var bar(int) = 0;    #immutable type... val can change
+@bar = 5;             #change value
+@var bar2 = 5;        #mutable type... val can change
+@var aString = "      #multi-line strings are allowed
   Some content
   and some more
 ";
-@var bar3;            //don't need to assign a value immediately
+@var bar3;            #don't need to assign a value immediately
 
 
 
-// calculate an expression
-@calc(5+5)                    //returns 10
-@var bar1 = 5+5               // because there is no quotes and the value appears to be a calculation, an error is raised
-@var bar2(int) = 5+5          // because "+" isn't a number, an error is raised
-@var bar3 = "5+5"             // returns 5+5 as variant
-@var bar4(int) = @calc(5+5)   // because @calc(5+5) returns 10, the value of bar4 would be set to 10
+# calculate an expression
+@calc(5+5)                    #returns 10
+@var bar1 = 5+5               # because there is no quotes and the value appears to be a calculation, an error is raised
+@var bar2(int) = 5+5          # because "+" isn't a number, an error is raised
+@var bar3 = "5+5"             # returns 5+5 as variant
+@var bar4(int) = @calc(5+5)   # because @calc(5+5) returns 10, the value of bar4 would be set to 10
 
 
 
-@const pi(float) = 3.14; //immutable type and val... type REQUIRED
-@pi.kill()  //.kill method removes variable entirely
+@const pi(float) = 3.14; #immutable type and val... type REQUIRED
+@pi.kill()  #.kill method removes variable entirely
 
 
 
-//accepts ints or floats
+# accepts ints or floats
 @func add (num1(int, float), num2(int, float)) {
   @print(@calc(@num1 + @num2));
 }
-@add(@bar, @bar2);  //10
+@add(@bar, @bar2);  #10
 
 
 
-//accepts only ints
+# accepts only ints
 @func sub (num1(int), num2(int)) {
   @print(@calc(@num1 - @num2))
 }
-@sub(@bar, @bar2); //0
+@sub(@bar, @bar2); #0
 
 
 
-//accepts variants (any type)
+# accepts variants (any type)
 @func mul(num1, num2, PROTECTED) {
-  @print(@calc(@bar * @bar2));  // RAISE ERROR
-  @print(@calc(@num1 * @num2)); // works since bar, bar2 are passed in
+  @print(@calc(@bar * @bar2));  # RAISE ERROR
+  @print(@calc(@num1 * @num2)); # works since bar, bar2 are passed in
 }
-@mul(@bar, @bar2);  //error on first attempt... 25 on second
+@mul(@bar, @bar2);  #error on first attempt... 25 on second
 
 /*
 alt idea for protected... use getglobal to import a global variable
@@ -58,41 +58,38 @@ args passed to executescript could be referenced within the script
 maybe both?
 */
 
-@mul(@bar, @bar2, DISABLE);       //returns nothing
-@mul(@bar, @bar2, disable=1)      //is disabled
-@mul(@bar, @bar2, disable=0)      //not disabled
-@mul(@bar, @bar2, NOINTERPRET);   //returns this literal string of code
-@func foo(NOINTERPRET, DISABLED){ //without disabled would return entire node... disabled takes precedence here
-
+@mul(@bar, @bar2, DISABLE);       #returns nothing
+@mul(@bar, @bar2, disable=1)      #is disabled
+@mul(@bar, @bar2, disable=0)      #not disabled
+@mul(@bar, @bar2, NOINTERPRET);   #returns this literal string of code
+@func foo(NOINTERPRET, DISABLED){
+  # without disabled would return entire node... disabled takes precedence here
 }
 
 
 
-//conditionals
-@if(condition, true, false)       //ternary
+# conditionals
+@tern(condition, return value if true, return value if false)       #ternary operator
 
-@ifTrue(condition) {              //execute block if condition is true
-
-}
-@ifFalse(condition){              //execute block if condition false
+@if(condition) {        #execute block if condition is true
 
 }
-@switch(expression){              //do something when expression evals to x or y etc
+
+@switch(expression){    #do something when expression evals to x or y etc
   @when('val1'){
-
+    #do something when expression returns 'val1'
   }
   @else(){
-    //catch all
+    #catch all
   }
 }
-
 
 
 @response_header('statusMessage', 'GOOD');
 @response_header('custom1', 'Goodnight Sky!');
 
 
-// NOT YET ADDED OPERATORS
+# NOT YET ADDED OPERATORS
 /*
 abs     absolute val
 trunc   truncate float to int
@@ -114,24 +111,24 @@ log   log of
 
 
 
-//SEE WHICH TOKENS AREN'T REP'd IN THIS TEST FILES
-//INTEGRITY CHECKING!
+# SEE WHICH TOKENS AREN'T REP'd IN THIS TEST FILES
+# INTEGRITY CHECKING!
 
-//SLEEPING/WAITING
-//ASYNC
-//AFTER RESPONSE SCRIPT (DEFER)
+# SLEEPING/WAITING
+# ASYNC
+# AFTER RESPONSE SCRIPT (DEFER)
 
-//private, public, protected class variables, methods
-//.asint, etc
-//error handling, try, catch, throw, finally/always
+# private, public, protected class variables, methods
+# .asint, etc
+# error handling, try, catch, throw, finally/always
 
-//enum?
-//loops
+# enum?
+# loops
 
-//methods like .type, .add, etc
-//.getMethods to return available methods for the type
+# methods like .type, .add, etc
+# .getMethods to return available methods for the type
 
-//how to handle multiple libs/modules/global scoping?
+# how to handle multiple libs/modules/global scoping?
 
 /*
 NEED TO CREATE VSCODE SYNTAX HIGHLIGHT EXTENSION

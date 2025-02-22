@@ -126,9 +126,8 @@ reservedTokens = {
   'mode': 'ref',
   'module': 'ref',
 
-  'if': 'ref',        #ternary
-  'ifTrue': 'ref',    #execute def if expr evals to true
-  'ifFalse': 'ref',   #execute def if expr evals to false
+  'tern': 'ref',      #ternary
+  'if': 'ref',        #execute def if expr evals to true
   'switch': 'ref',    #switch block
   'when': 'ref',      #when the expr in switch evals to this
   'else': 'ref',      #when the expr in switch evals to none of the whens
