@@ -1,4 +1,4 @@
-# remember... language is case insensitive
+# Nexus is case iNsenSItIVe
 
 
 
@@ -11,6 +11,22 @@
   and some more
 ";
 @var bar3;            #don't need to assign a value immediately
+
+
+
+# f-strings
+@var exclaim = '!!'
+@var appendStr = f', such as this one@exclaim()'
+@var fStr = f"F-strings can accept expressions in them@appendStr()"
+
+# f-strings (functional/formatted strings) allows for additional Nexus code to be written inline
+# strings with quotes " or apos ' can be used for f-strings
+
+
+
+# escape strings delims
+# An apos ' is used in this string but doesn't end the string since it is escaped using \
+@var escaped = 'Introducing realasira\' web-dev language: Nexus!'
 
 
 
@@ -29,7 +45,7 @@
 
 
 # accepts ints or floats
-@func add (num1(int, float), num2(int, float)) {
+@def add (num1(int, float), num2(int, float)) {
   @print(@calc(@num1 + @num2));
 }
 @add(@bar, @bar2);  #10
@@ -37,7 +53,7 @@
 
 
 # accepts only ints
-@func sub (num1(int), num2(int)) {
+@def sub (num1(int), num2(int)) {
   @print(@calc(@num1 - @num2))
 }
 @sub(@bar, @bar2); #0
@@ -45,7 +61,7 @@
 
 
 # accepts variants (any type)
-@func mul(num1, num2, PROTECTED) {
+@def mul(num1, num2, PROTECTED) {
   @print(@calc(@bar * @bar2));  # RAISE ERROR
   @print(@calc(@num1 * @num2)); # works since bar, bar2 are passed in
 }
@@ -53,7 +69,7 @@
 
 /*
 alt idea for protected... use getglobal to import a global variable
-using executescript() {...} would limit allowed expressions such as getglobal
+using executescript() {...} would limit allowed expressions such as getglobal, nonlocal
 args passed to executescript could be referenced within the script
 maybe both?
 */
@@ -62,7 +78,7 @@ maybe both?
 @mul(@bar, @bar2, disable=1)      #is disabled
 @mul(@bar, @bar2, disable=0)      #not disabled
 @mul(@bar, @bar2, NOINTERPRET);   #returns this literal string of code
-@func foo(NOINTERPRET, DISABLED){
+@def foo(NOINTERPRET, DISABLED){
   # without disabled would return entire node... disabled takes precedence here
 }
 

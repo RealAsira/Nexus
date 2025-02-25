@@ -111,7 +111,7 @@ reservedTokens = {
   'guid': 'ref',    #returns global identifier string
   'random': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
 
-  'func': 'ref',
+  'def': 'ref',       #function
   'getglobal': 'ref', #gets a module level or global var for the function
   'print': 'ref',
   'return': 'ref',
@@ -214,7 +214,7 @@ tokenStack = tokenStack()
 
 
 # process to tokenize a submitted script
-def tokenizeScript(script, scriptName:str = "Unknown Nexus Module"):
+def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
   print(f"{script}\n\n\n")
 
   global currentToken
@@ -223,10 +223,11 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module"):
   global xmlDelimTokens
 
   currentToken = None
-  tokenLineNumber = 1
-  processingStr = False
-  processingStrDelim = None
-  processingXML = False
+  tokenLineNumber = 1         # file line number for where token is at
+  processingStr = False       # currently processing a string token
+  processingStrDelim = None   # " or '
+  processingFStr = False      # currently processing a functional / formatted string token
+  processingXML = False       # currently processing an xml token
 
   scriptLen = len(script) # total length of the script
   pos = 0                 # position where is being processed
@@ -262,35 +263,46 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module"):
 
 
   # gets and returns the next token
-  def getToken():
+  def getToken() -> str:
     nonlocal script
     nonlocal tokenLineNumber
     nonlocal processingStr
     nonlocal processingStrDelim
+    nonlocal processingFStr
     nonlocal processingXML
     
-    aToken = script[pos]
+    aToken = script[pos].lower()
     
     # new-line = inc line number
     if aToken == '\n':
       tokenLineNumber += 1
       #print(f"a. Found token newline")
       return aToken
+    
 
     # this is the start of a string
     elif aToken in stringDelimTokens:
       #print(f"b. Found token {aToken}")
 
-      # currently processing a string AND end delim match start delim .. end of string
+      # currently processing a string AND end delim match start delim .. end of string unless escaped
       if processingStr and (aToken == processingStrDelim):
-        processingStr = False
-        processingStrDelim = None # no longer processing, don't store
+        isEscaped = True if script[pos-1] == '\\' else False
+        print('isEscaped!', isEscaped, aToken, script[pos-1])
+
+        # if it is escaped, continue processing string; otherwise, is end of string
+        if not isEscaped:
+          processingStr = False
+          processingFStr = False
+          processingStrDelim = None # no longer processing, don't store
         return aToken
-      
-      if not processingStr:
+        
+      elif not processingStr:
         processingStr = True
         processingStrDelim = aToken
+        if script[pos-1].lower() == 'f':
+          processingFStr = True   # this is a formatted/functional string
         return aToken
+
 
     # ADD XML DELIM STUFF HERE
     # ADD XML DELIM STUFF HERE
@@ -307,19 +319,27 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module"):
       #print(f"c. Found token {aToken.replace(' ', '_')}")
       return aToken
 
+
     # multi-character reserved or generic arg..
     else:
-      # get entire token
-
-      if not processingStr: # simply find end of this token by getting start of next
+      # simply find end of this token by getting start of next
+      if not processingStr:
+        #print(f"d. Found token {aToken}")
         endPos = findNextReservedSingleCharToken()
         aToken = script[pos:endPos]
 
-      if processingStr:     # only certain chars should split the string
-        endPos = findNextReservedSingleCharToken('"')
+      # vanilla string
+      if processingStr and not processingFStr:     
+        #print(f"e. Found token {aToken}")
+        endPos = findNextReservedSingleCharToken(processingStrDelim)
         aToken = script[pos:endPos]
 
-      #print(f"d. Found token {aToken}")
+      # functional string - tokenize each possible token in it
+      if processingStr and processingFStr:
+        #print(f"f. Found token {aToken}")
+        endPos = findNextReservedSingleCharToken()
+        aToken = script[pos:endPos]
+
       return aToken
 
 
@@ -353,8 +373,15 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module"):
       elif currentToken in stringDelimTokens:
         # processingStr is toggled in getToken. If true, then a str just started..
         if processingStr:
-          #print(f"Stored token as strStrt {currentToken}")
-          tokenStack.insert(tokenLineNumber, "strStrt", currentToken)
+          isEscaped = True if script[pos-1] == '\\' else False
+          print('isEscaped', isEscaped, currentToken, script[pos-1])
+
+          if isEscaped:
+            tokenStack.insert(tokenLineNumber, reservedTokens[currentToken], currentToken)
+  
+          if not isEscaped:
+            #print(f"Stored token as strStrt {currentToken}")
+            tokenStack.insert(tokenLineNumber, "strStrt", currentToken)
           
         if not processingStr:
           #print(f"Stored token as strEnd {currentToken}")
