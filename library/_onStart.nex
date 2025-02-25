@@ -1,3 +1,5 @@
-@var url = "example.com/"
-@var url2 = "https://@url"
-@url2
+@var title = 'Talia\'s Language';
+@var lang = ': Nexus'
+@var title = f'Talia\'s Language@lang';
+
+@print(@title()); # result: Talia's Language: Nexus
