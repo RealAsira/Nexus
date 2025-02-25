@@ -191,7 +191,7 @@ class tokenStack:
 
   # add token to end of stack
   def insert(self, lineNumber, tokenType, tokenValue):
-    #print(f"Stored token", lineNumber, tokenType, tokenValue)
+    #print(f"Stored token from line", lineNumber, 'as', tokenType, tokenValue)
     self.stack.insert(len(self.stack), [int(lineNumber), tokenType.strip(), tokenValue.strip()])
     return
   
@@ -215,8 +215,6 @@ tokenStack = tokenStack()
 
 # process to tokenize a submitted script
 def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
-  print(f"{script}\n\n\n")
-
   global currentToken
   global reservedTokens
   global stringDelimTokens
@@ -271,7 +269,7 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
     nonlocal processingFStr
     nonlocal processingXML
     
-    aToken = script[pos].lower()
+    aToken = str(script[pos].lower())
     
     # new-line = inc line number
     if aToken == '\n':
@@ -287,7 +285,6 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
       # currently processing a string AND end delim match start delim .. end of string unless escaped
       if processingStr and (aToken == processingStrDelim):
         isEscaped = True if script[pos-1] == '\\' else False
-        print('isEscaped!', isEscaped, aToken, script[pos-1])
 
         # if it is escaped, continue processing string; otherwise, is end of string
         if not isEscaped:
@@ -304,16 +301,46 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
         return aToken
 
 
-    # ADD XML DELIM STUFF HERE
-    # ADD XML DELIM STUFF HERE
-    # ADD XML DELIM STUFF HERE
-    # ADD XML DELIM STUFF HERE
-
     # this token is either XML or comparison
-    #elif aToken in xmlDelimTokens:
-    #  ..#get info abt if this is comparison or xml
+    elif aToken in xmlDelimTokens:
+      # +1 to get next pos, -1 to get set script last char bound
+      nextChar = str(script[min(pos+1, scriptLen-1)]).lower()
 
+      if nextChar not in reservedTokens: processingXML = True
+      if nextChar == '/': processingXML = True  # / is reservered, but </ is xml-close tag start
 
+      if not processingXML: # comparison operator
+        #print(f"g. Found token {aToken}")
+        processingXML = False
+        return aToken
+
+      elif processingXML:
+        # /> (xml open-tag self-end)
+        if (str(aToken) + str(nextChar) == '/>'):
+          aToken = aToken + nextChar  # get /> instead of /
+          #print(f"h. Found token {aToken}")
+          return aToken
+        
+        # </ (xml close-tag start)
+        elif (str(aToken) + str(nextChar) == '</'):
+          aToken = aToken + nextChar  # get </ instead of <
+          #print(f"h. Found token {aToken}")
+          return aToken
+        
+        # < (xml open-tag start)
+        elif aToken == '<':
+          #print(f"h. Found token {aToken}")
+          return aToken
+        
+        # > (xml tag-end)
+        elif aToken == '>':
+          #print(f"h. Found token {aToken}")
+          return aToken
+
+        else:
+          raise Exception('XML token-type lookup error:', aToken)
+
+          
     # reserved single char token (including space delim)
     elif aToken in reservedTokens:
       #print(f"c. Found token {aToken.replace(' ', '_')}")
@@ -374,18 +401,48 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
         # processingStr is toggled in getToken. If true, then a str just started..
         if processingStr:
           isEscaped = True if script[pos-1] == '\\' else False
-          print('isEscaped', isEscaped, currentToken, script[pos-1])
 
           if isEscaped:
             tokenStack.insert(tokenLineNumber, reservedTokens[currentToken], currentToken)
   
-          if not isEscaped:
+          elif not isEscaped:
             #print(f"Stored token as strStrt {currentToken}")
             tokenStack.insert(tokenLineNumber, "strStrt", currentToken)
           
-        if not processingStr:
+        elif not processingStr:
           #print(f"Stored token as strEnd {currentToken}")
           tokenStack.insert(tokenLineNumber, "strEnd", currentToken)
+
+        pos += len(currentToken)
+        currentToken = None
+        continue
+
+
+      # the current token is an XML tag of some kind instead of comparison operator
+      elif processingXML and currentToken in xmlDelimTokens:
+        # /> (xml open-tag self-end)
+        if (currentToken == '/>'):
+          #print(f"Stored token as xmlSlfEnd {currentToken}")
+          tokenStack.insert(tokenLineNumber, 'xmlSlfEnd', currentToken)
+          processingXML = False # end of tag
+
+        # </ (xml close-tag start)
+        elif (currentToken == '</'):
+          #print(f"Stored token as xmlClsStrt {currentToken}")
+          tokenStack.insert(tokenLineNumber, 'xmlClsStrt', currentToken)
+          processingXML = True  # still processing
+
+        # < (xml open-tag start)
+        elif currentToken == '<':
+          #print(f"Stored token as xmlOpnStrt {currentToken}")
+          tokenStack.insert(tokenLineNumber, 'xmlOpnStrt', currentToken)
+          processingXML = True  # still processing
+
+        # > (xml tag-end)
+        elif currentToken == '>':
+          #print(f"Stored token as xmlTagEnd {currentToken}")
+          tokenStack.insert(tokenLineNumber, 'xmlTagEnd', currentToken)
+          processingXML = False # end of tag
 
         pos += len(currentToken)
         currentToken = None
@@ -412,8 +469,12 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
   # insert an end of script token
   tokenStack.insert(tokenLineNumber + 1, 'scptEnd', '')
   
+  """
+  print(f"\n{script}\n")
   print("TOKEN STACK:\n")
   for item in tokenStack.stack:
     print(item)
+  print('\n')
+  """
   
   return (tokenStack.stack)
