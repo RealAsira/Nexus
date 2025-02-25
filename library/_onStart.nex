@@ -1,5 +1,4 @@
-@var title = 'Asira\'s Language';
-@var lang = ': Nexus'
-@var title = f'Asira\'s Language@lang';
+@var url = "https://example.com/favico.ico"
 
-@print(@title()); # result: Asira's Language: Nexus
+<p>@url</p>
+<@url>
