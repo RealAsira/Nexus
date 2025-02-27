@@ -6,22 +6,13 @@ TOKENIZER/LEXER CREATES "TOKENS" FROM A SCRIPT
 
 
 
-# custom message for tokenizer errors
-class customErr(Exception):
-  def __init__(self,msg):
-    super().__init__(msg)
-
-
-
-
-
 # reserved symbols and keywords in the language
-reservedTokens = {
+reservedTokens:dict = {
   # Misc
   ' ': 'whitespace',
   '\n': 'nl',
   '\\': 'escNxt',   #single \ to escape next char
-  '#': 'lnCmt',    #single line comment
+  '#': 'lnCmt',     #single line comment
   '/*': 'cmtStrt',  #multi-line comment
   '*/': 'cmtEnd',
 
@@ -165,13 +156,13 @@ reservedTokens = {
 }
 
 # these tokens are concatted instead
-stringDelimTokens = {
+stringDelimTokens:dict = {
   "'",  # start or end of a string
   '"',
 }
 
 # these tokens require additional processing to determine if they are comparison operators or xml/html
-xmlDelimTokens = {
+xmlDelimTokens:dict = {
   '<',  # possible xml open-tag start
   '>',  # possible xml open-tag end
   '/>', # xml open-tag self-close
@@ -190,14 +181,13 @@ class tokenStack:
     self.stack = []
 
   # add token to end of stack
-  def insert(self, lineNumber, tokenType, tokenValue):
+  def insert(self, lineNumber:int, tokenType:str, tokenValue):
     #print(f"Stored token from line", lineNumber, 'as', tokenType, tokenValue)
     self.stack.insert(len(self.stack), [int(lineNumber), tokenType.strip(), tokenValue.strip()])
-    return
   
-  # remove first token from stack
-  def pop(self):
-    self.stack.pop(0)
+  # remove token from stack (first by default)
+  def pop(self, pos:int=0):
+    self.stack.pop(pos)
   
   # return first token in stack
   def readCurrentToken(self):
@@ -214,28 +204,28 @@ tokenStack = tokenStack()
 
 
 # process to tokenize a submitted script
-def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
-  global currentToken
+def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> object:
+  currentToken:list
   global reservedTokens
   global stringDelimTokens
   global xmlDelimTokens
 
   currentToken = None
-  tokenLineNumber = 1         # file line number for where token is at
-  processingStr = False       # currently processing a string token
-  processingStrDelim = None   # " or '
-  processingFStr = False      # currently processing a functional / formatted string token
-  processingXML = False       # currently processing an xml token
+  tokenLineNumber:int = 1         # file line number for where token is at
+  processingStr:bool = False      # currently processing a string token
+  processingStrDelim:chr = None   # " or '
+  processingFStr:bool = False     # currently processing a functional / formatted string token
+  processingXML:bool = False      # currently processing an xml token
 
-  scriptLen = len(script) # total length of the script
-  pos = 0                 # position where is being processed
+  scriptLen:int = len(script) # total length of the script
+  pos:int = 0                 # position where is being processed
 
 
   # returns the position of the next single character token
   def findNextReservedSingleCharToken(searchToken:str = None) -> int:
     nonlocal script
     nonlocal pos
-    cursor = pos
+    cursor:int = pos
 
     while True:
       if cursor < scriptLen:
@@ -269,7 +259,7 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
     nonlocal processingFStr
     nonlocal processingXML
     
-    aToken = str(script[pos].lower())
+    aToken:str = str(script[pos].lower())
     
     # new-line = inc line number
     if aToken == '\n':
@@ -304,7 +294,7 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
     # this token is either XML or comparison
     elif aToken in xmlDelimTokens:
       # +1 to get next pos, -1 to get set script last char bound
-      nextChar = str(script[min(pos+1, scriptLen-1)]).lower()
+      nextChar:str = str(script[min(pos+1, scriptLen-1)]).lower()
 
       if nextChar not in reservedTokens: processingXML = True
       if nextChar == '/': processingXML = True  # / is reservered, but </ is xml-close tag start
@@ -352,19 +342,19 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
       # simply find end of this token by getting start of next
       if not processingStr:
         #print(f"d. Found token {aToken}")
-        endPos = findNextReservedSingleCharToken()
+        endPos:int = findNextReservedSingleCharToken()
         aToken = script[pos:endPos]
 
       # vanilla string
       if processingStr and not processingFStr:     
         #print(f"e. Found token {aToken}")
-        endPos = findNextReservedSingleCharToken(processingStrDelim)
+        endPos:int = findNextReservedSingleCharToken(processingStrDelim)
         aToken = script[pos:endPos]
 
       # functional string - tokenize each possible token in it
       if processingStr and processingFStr:
         #print(f"f. Found token {aToken}")
-        endPos = findNextReservedSingleCharToken()
+        endPos:int = findNextReservedSingleCharToken()
         aToken = script[pos:endPos]
 
       return aToken
@@ -400,7 +390,7 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
       elif currentToken in stringDelimTokens:
         # processingStr is toggled in getToken. If true, then a str just started..
         if processingStr:
-          isEscaped = True if script[pos-1] == '\\' else False
+          isEscaped:bool = True if script[pos-1] == '\\' else False
 
           if isEscaped:
             tokenStack.insert(tokenLineNumber, reservedTokens[currentToken], currentToken)
@@ -477,4 +467,4 @@ def tokenizeScript(script, scriptName:str = "Unknown Nexus Module") -> list:
   print('\n')
   """
   
-  return (tokenStack.stack)
+  return (tokenStack)

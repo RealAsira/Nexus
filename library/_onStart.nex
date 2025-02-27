@@ -1,4 +1,2 @@
-@var url = "https://example.com/favico.ico"
-
-<p>@url</p>
-<@url>
+@var url = "https://example.com/favico.ico";
+@url();

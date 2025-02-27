@@ -7,11 +7,11 @@ from nexParser import parseTokens
 
 
 # GLOBAL VARIABLES
-request_headers = {}    # client's request headers
-response_headers = {}   # server's response headers
+request_headers:dict = {}    # client's request headers
+response_headers:dict = {}   # server's response headers
 response_content = None # content returned by server
-config = {}             # nexus server configuration options
-sockets = []            # hosts/ports to bind to
+config:dict = {}             # nexus server configuration options
+sockets:list = []            # hosts/ports to bind to
 
 
 
@@ -24,7 +24,7 @@ def getConfig():
     with open('nexServer.config', 'r') as nexServer_config:
 
       for line in nexServer_config:
-        line = line.strip()
+        line:str = line.strip()
         if not line or line.startswith('#'): continue
         if '=' in line:
           setting, value = line.split('=', 1)
@@ -99,9 +99,9 @@ def parseRequest(request:str):
   request_headers = {}
 
   request = str(request)
-  lines = request.split("\r\n")
+  lines:str = request.split("\r\n")
   
-  rqstLine = lines[0]
+  rqstLine:str = lines[0]
   method, path, protocol = rqstLine.split(' ')
   request_headers['method'] = method
   request_headers['path'] = path
@@ -128,7 +128,7 @@ def constructResponse() -> bytes:
   # TOKENIZE AND PARSE .NEX FILES ... begin with _onStart.nex
   # get starting .nex script
   try:
-    scriptPath = config['library'] + '/_onStart.nex'
+    scriptPath:str = config['library'] + '/_onStart.nex'
     with open(scriptPath, "r", encoding="utf-8") as file:
       response_content = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
   except:
@@ -136,11 +136,11 @@ def constructResponse() -> bytes:
 
   # attempt tokenization
   try:
-    tokens = tokenizeScript(response_content)
+    tokenStack:object = tokenizeScript(response_content)
 
     # attempt parse
     try:
-      AST = parseTokens(tokens)
+      AST:object = parseTokens(tokenStack)
     except Exception as err:
       print(f"Fatal Error: Could not parse tokens into nodal-AST ... Error: {str(err)}")
   except Exception as err:
@@ -243,7 +243,7 @@ async def handleRequest(reader, writer):
 # LISTEN ON EACH SOCKET ASYNC'd
 async def startServer():
   # async'd server tasks
-  tasks = []
+  tasks:list = []
 
   # indefinitely server on each socket
   for aSocket in sockets:
