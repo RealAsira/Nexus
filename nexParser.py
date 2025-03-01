@@ -94,41 +94,6 @@ def parseTokens(tokenStack:object) -> object:
     if len(tokenStack.stack) == 0:
       break
 
-    # run function to populate currentToken data
     getNextToken()
     print(currentToken)
-
-    if tokenType in ['scptStrt', 'scptEnd']:
-      AST.insert(nodeID, tokenType)
-      resetForNextNode()
-      continue
-
-    # start of an expression
-    if tokenType == 'exprStrt' and tokenValue == '@':
-      nodeType = 'expression'
-      
-      # next token should be a ref
-      getNextToken()
-      if tokenType == 'ref':
-        nodeRef = tokenValue
-      elif tokenType == 'arg':
-        nodeRef = tokenValue
-      else:
-        raise Exception('Fatal Error: Expected expression reference ')
-      
-      getNextToken()
-
-    
-      """
-      nodeID: nodeID
-      nodeType: 'expression'
-      nodeRef: 'var'
-      nodeName: 'url'
-      nodeVal: 'https://example.com/favico.ico'
-      """
-
-
-
-  print(AST.tree)
-
     
