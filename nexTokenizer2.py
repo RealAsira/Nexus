@@ -270,8 +270,6 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
 
     # this is the start of a string
     elif aToken in stringDelimTokens:
-      #print(f"b. Found token {aToken}")
-
       # currently processing a string AND end delim match start delim .. end of string unless escaped
       if processingStr and (aToken == processingStrDelim):
         isEscaped = True if script[pos-1] == '\\' else False
@@ -280,15 +278,16 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
         if not isEscaped:
           processingStr = False
           processingFStr = False
-          processingStrDelim = None # no longer processing, don't store
-        return aToken
-        
+          processingStrDelim = None # no longer processing
+
       elif not processingStr:
         processingStr = True
         processingStrDelim = aToken
         if script[pos-1].lower() == 'f':
           processingFStr = True   # this is a formatted/functional string
-        return aToken
+
+      #print(f"b. Found token {aToken}")
+      return aToken
 
 
     # this token is either XML or comparison
@@ -300,8 +299,8 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
       if nextChar == '/': processingXML = True  # / is reservered, but </ is xml-close tag start
 
       if not processingXML: # comparison operator
-        #print(f"g. Found token {aToken}")
         processingXML = False
+        #print(f"g. Found token {aToken}")
         return aToken
 
       elif processingXML:
@@ -340,22 +339,22 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
     # multi-character reserved or generic arg..
     else:
       # simply find end of this token by getting start of next
-      if not processingStr:
-        #print(f"d. Found token {aToken}")
+      if not processingStr and not processingFStr:
         endPos:int = findNextReservedSingleCharToken()
         aToken = script[pos:endPos]
+        #print(f"d. Found token {aToken}")
 
       # vanilla string
       if processingStr and not processingFStr:     
-        #print(f"e. Found token {aToken}")
         endPos:int = findNextReservedSingleCharToken(processingStrDelim)
         aToken = script[pos:endPos]
+        #print(f"e. Found token {aToken}")
 
       # functional string - tokenize each possible token in it
       if processingStr and processingFStr:
-        #print(f"f. Found token {aToken}")
         endPos:int = findNextReservedSingleCharToken()
         aToken = script[pos:endPos]
+        #print(f"f. Found token {aToken}")
 
       return aToken
 
