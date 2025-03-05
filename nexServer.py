@@ -1,3 +1,4 @@
+import nexServerGlobals
 import asyncio
 import datetime
 import os
