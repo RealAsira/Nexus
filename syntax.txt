@@ -2,15 +2,16 @@
 
 
 
-# variables
-@var bar(int) = 0;    #immutable type... val can change
-@bar = 5;             #change value
-@var bar2 = 5;        #mutable type... val can change
-@var aString = "      #multi-line strings are allowed
+# variables - type declaration required, but can also be "any"
+@var bar:int = 0;     #immutable type... val can change
+@bar = 5;             #change/assign value
+@var bar2:any = 5;    #mutable type of "any"... val can change
+@bar2 = "now a string"
+@var aString:any = "  #multi-line strings are allowed
   Some content
   and some more
 ";
-@var bar3;            #don't need to assign a value immediately
+@var bar3:any;        #don't need to assign a value immediately
 
 
 
@@ -30,22 +31,20 @@
 
 
 
-# calculate an expression
+# calculate an expression ... NEEDS MORE WORK
 @calc(5+5)                    #returns 10
-@var bar1 = 5+5               # because there is no quotes and the value appears to be a calculation, an error is raised
-@var bar2(int) = 5+5          # because "+" isn't a number, an error is raised
-@var bar3 = "5+5"             # returns 5+5 as variant
-@var bar4(int) = @calc(5+5)   # because @calc(5+5) returns 10, the value of bar4 would be set to 10
+@var bar2:int = 5+5           # because "+" isn't a number, an error is raised
+@var bar4:int = @calc(5+5)    # because @calc(5+5) returns 10, the value of bar4 would be set to 10
 
 
 
-@const pi(float) = 3.14; #immutable type and val... type REQUIRED
-@pi.kill()  #.kill method removes variable entirely
+@const pi:float = 3.14;   #immutable type and val... type REQUIRED
+@pi.kill()                #.kill method removes variable entirely
 
 
 
-# accepts ints or floats
-@def add (num1(int, float), num2(int, float)) {
+# accepts ints or floats, returns none (ie return type = none)
+@def add (num1:int:float, num2:int:float):none {
   @print(@calc(@num1 + @num2));
 }
 @add(@bar, @bar2);  #10
@@ -53,26 +52,19 @@
 
 
 # accepts only ints
-@def sub (num1(int), num2(int)) {
+@def sub (num1:int:, num2:int):none {
   @print(@calc(@num1 - @num2))
 }
 @sub(@bar, @bar2); #0
 
 
+# DEMONSTRATE VARIABLE SCOPING, GLOBAL, NONLOCAL, ETC
 
-# accepts variants (any type)
-@def mul(num1, num2, PROTECTED) {
-  @print(@calc(@bar * @bar2));  # RAISE ERROR
-  @print(@calc(@num1 * @num2)); # works since bar, bar2 are passed in
+
+# function only allowd to return floats or ints
+@def divide(num1:int:float, num2:int:float):int:float {
+  @return()
 }
-@mul(@bar, @bar2);  #error on first attempt... 25 on second
-
-/*
-alt idea for protected... use getglobal to import a global variable
-using executescript() {...} would limit allowed expressions such as getglobal, nonlocal
-args passed to executescript could be referenced within the script
-maybe both?
-*/
 
 @mul(@bar, @bar2, DISABLE);       #returns nothing
 @mul(@bar, @bar2, disable=1)      #is disabled

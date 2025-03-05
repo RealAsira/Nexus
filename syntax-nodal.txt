@@ -1,3 +1,18 @@
+# as JSON
+{"type": "root", 
+  "body": [
+
+  ]
+}
+/* Each Node...
+  lineNumber: lineNumber
+  nodeType: derive from tokenType and tokenValue
+  nodeValue: tokenValue
+*/
+
+
+
+
 # VARIABLES
 # create var
 @var bar(int);

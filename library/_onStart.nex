@@ -1,2 +1,2 @@
-@var url = "https://example.com/";
+@var url:str = "https://example.com/";
 @url();
