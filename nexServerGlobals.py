@@ -46,14 +46,14 @@ allReservedTokens:dict = {
   #XNOR = !(var1 x|| var 2) #XNOR -intentionally excluded for simplicity
 
   # Binary-ish Comparison
-  'all': 'ref',       #@all() - ie several chained &&    
-  'any': 'ref',       #several chained ||
-  'either': 'ref',    #like any but only two expressions
-  'notAny': 'ref',    #!(@any)... @not(@any(...))
-  'neither': 'ref',   #like none but only two expressions
-  'not': 'ref',       #same as !() but as reference
-  'iv': 'ref',        #value is non-null, non-blank
-  'nv': 'ref',        #value is null or blank
+  #'ALL': 'ref',       #@all() - ie several chained &&    
+  #'ANY': 'ref',       #several chained ||
+  #'EITHER': 'ref',    #like any but only two expressions
+  #'NOTANY': 'ref',    #!(@any)... @not(@any(...))
+  #'NEITHER': 'ref',   #like none but only two expressions
+  #'NOT': 'ref',       #same as !() but as reference
+  'IV': 'ref',        #value is non-null, non-blank
+  'NV': 'ref',        #value is null or blank
 
   # Operators
   '+': 'op',    
@@ -70,149 +70,174 @@ allReservedTokens:dict = {
   '=': 'op',    #assign
 
   # Keywords (reserved references)
-  'abort': 'ref',     #kill entire response w/o sending anything
-  'stop': 'ref',      #stop further addition to response.. parse it and send
-  'cookie': 'ref',    #assign a cookie to client
-  'httpGET': 'ref',   #try to get data from somewhere
-  'httpPOST': 'ref',  #post something somewhere
-  'output': 'ref',    #sets the current output value
-  'sleep': 'ref',     #sleep? should this be in lang?
-  'wait': 'ref',      #wait? should this be in lang?
+  'ABORT': 'ref',     #kill entire response w/o sending anything
+  'STOP': 'ref',      #stop further addition to response.. parse it and send
+  'COOKIE': 'ref',    #assign a cookie to client
+  'HTTPGET': 'ref',   #try to get data from somewhere
+  'HTTPPOST': 'ref',  #post something somewhere
+  'OUTPUT': 'ref',    #sets the current output value
+  'SLEEP': 'ref',     #time before continuing response
+  'WAIT': 'ref',      #time before continuing ANY responses
 
-  'rspns_header': 'ref',
-  'rspns_redir': 'ref',
+  'RSPNS_HEADER': 'ref',
+  'RSPNS_REDIR': 'ref',
 
-  'calc': 'ref',
-  'min': 'ref',
-  'max': 'ref',
+  'CALC': 'ref',
+  'MIN': 'ref',
+  'MAX': 'ref',
 
-  'chr': 'ref',
-  'ord': 'ref',
+  'CHR': 'ref',
+  'ORD': 'ref',
 
-  'date': 'ref',    #@date('12/25/2025', '13:05:17:999') returns date as float .. @now() if no arg
-  'now': 'ref',     #datetime right now as float
-  'today': 'ref',   #date with 00:00:00 time as float
+  'DATE': 'ref',    #@date('12/25/2025', '13:05:17:999') returns date as float .. @now() if no arg
+  'NOW': 'ref',     #datetime right now as float
+  'TODAY': 'ref',   #date with 00:00:00 time as float
 
-  'guid': 'ref',    #returns global identifier string
-  'random': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
+  'GUID': 'ref',    #returns global identifier string
+  'RANDOM': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
 
-  'def': 'ref',       #function
-  'global': 'ref',    #gets a module level or global var for the function
-  'nonlocal': 'ref',  #gets a var one scope above the function
-  'print': 'ref',
-  'return': 'ref',
+  'DEF': 'ref',       #function
+  'GLOBAL': 'ref',    #gets a module level or global var for the function
+  'NONLOCAL': 'ref',  #gets a var one scope above the function
+  'PRINT': 'ref',
+  'RETURN': 'ref',
 
-  'class': 'ref',
-  'object': 'ref',
-  'self': 'ref',
+  'CLASS': 'ref',
+  'OBJECT': 'ref',
+  'SELF': 'ref',
 
-  'library': 'ref',
-  'use': 'ref',
+  'LIBRARY': 'ref',
+  'USE': 'ref',
 
-  'tern': 'ref',      #ternary
-  'if': 'ref',        #execute def if expr evals to true
-  'switch': 'ref',    #switch block
-  'when': 'ref',      #when the expr in switch evals to this
-  'else': 'ref',      #when the expr in switch evals to none of the whens
+  'TERN': 'ref',      #ternary
+  'IF': 'ref',        #execute def if expr evals to true
+  'SWITCH': 'ref',    #switch block
+  'WHEN': 'ref',      #when the expr in switch evals to this
+  'ELSE': 'ref',      #when the expr in switch evals to none of the whens
 
-  'const': 'ref',     #immutable, non-reassignable var
-  'var': 'ref',       #mutable unless type explicitly stated in declaration
+  'CONST': 'ref',     #immutable, non-reassignable var
+  'VAR': 'ref',       #mutable unless type explicitly stated in declaration
 
   # Types
-  'any': 'type',      #a generic type that will attempt to determine the actual type when called
-  'blank': 'type',    #value is "empty" or "blank"
-  'null': 'type',     #has no value, not even blank
-  'none': 'type',     #func/method doesn't return a value
-  'str': 'type',
+  'ANY': 'type',      #a generic type that will attempt to determine the actual type when called
+  'BLANK': 'type',    #value is "empty" or "blank"
+  'NULL': 'type',     #has no value, not even blank
+  'NONE': 'type',     #func/method doesn't return a value
+  'STR': 'type',
     
-  'array': 'type',      #data structure array
-  'dict': 'type',       #data structure dictionary
-  'ref': 'type',        #points to another expression
+  'LIST': 'type',       #data structure array/list
+  'DICT': 'type',       #data structure dictionary/object
+  'REF': 'type',        #points to another expression
     
-  'bool': 'type',
-  'datetime': 'type',
-  'numb': 'type',       #super type of both int and float... generic number container than handles eitehr
-  'int': 'type',        #trunc decimals to make whole number (signed)
-  'float': 'type',      
-  'double': 'type',     #subtype of float.. currently no difference)
-  'money': 'type',      #subtype of float.. returns 0.00 format
+  'BOOL': 'type',
+  'DATETIME': 'type',
+  'NUMB': 'type',       #super type of both int and float... generic number container than handles eitehr
+  'INT': 'type',        #trunc decimals to make whole number (signed)
+  'FLOAT': 'type',      
+  'DOUBLE': 'type',     #subtype of float.. currently no difference)
+  'MONEY': 'type',      #subtype of float.. returns 0.00 format
 
-  'base64': 'type',     #encoded data in base64
-  'binary': 'type',     #encoded data in binary
-  'hex': 'type',        #encoded data in hex
-  'utf8': 'type',       #encoded data in UTF8
+  'BASE64': 'type',     #encoded data in base64
+  'BINARY': 'type',     #encoded data in binary
+  'HEX': 'type',        #encoded data in hex
+  'UTF8': 'type',       #encoded data in UTF8
     
   # Special Args (args to modify behavior of expression)
-  'global': 'spArg',      #makes this variable globally scoped
-  'disable': 'spArg',     #disables this block entirely
-  'nointerpret': 'spArg', #returns block as string literal
+  'GLBOAL': 'spArg',      #makes this variable globally scoped
+  'DISABLE': 'spArg',     #disables this block entirely
+  'NOINTERPRET': 'spArg', #returns block as string literal
+}
+
+
+# these types are built into Nexus
+exprTypeTokens = {
+  # Nexus Primitive Types
+  'ANY': 'type',      #a generic type that will attempt to determine the actual type when called
+  'BLANK': 'type',    #value is "empty" or "blank"
+  'NULL': 'type',     #has no value, not even blank
+  'NONE': 'type',     #func/method doesn't return a value
+  'STR': 'type',
+    
+  'LIST': 'type',       #data structure array/list
+  'DICT': 'type',       #data structure dictionary/object
+  'REF': 'type',        #points to another expression
+    
+  'BOOL': 'type',
+  'DATETIME': 'type',
+  'NUMB': 'type',       #super type of both int and float... generic number container than handles eitehr
+  'INT': 'type',        #trunc decimals to make whole number (signed)
+  'FLOAT': 'type',      
+  'DOUBLE': 'type',     #subtype of float.. currently no difference)
+  'MONEY': 'type',      #subtype of float.. returns 0.00 format
+
+  'BASE64': 'type',     #encoded data in base64
+  'BINARY': 'type',     #encoded data in binary
+  'HEX': 'type',        #encoded data in hex
+  'UTF8': 'type',       #encoded data in UTF8
 }
 
 
 # built-in references pointing to built-in functionality
 refTypeTokens = {
   # Binary-ish Comparison
-  'all': 'ref',       #@all() - ie several chained &&    
-  'any': 'ref',       #several chained ||
-  'either': 'ref',    #like any but only two expressions
-  'notAny': 'ref',    #!(@any)... @not(@any(...))
-  'neither': 'ref',   #like none but only two expressions
-  'not': 'ref',       #same as !(...) but as reference eg @not(...)
-  'iv': 'ref',        #value is non-null, non-blank
-  'nv': 'ref',        #value is null or blank
+  #'ALL': 'ref',       #@all() - ie several chained &&    
+  #'ANY': 'ref',       #several chained ||
+  #'EITHER': 'ref',    #like any but only two expressions
+  #'NOTANY': 'ref',    #!(@any)... @not(@any(...))
+  #'NEITHER': 'ref',   #like none but only two expressions
+  #'NOT': 'ref',       #same as !(...) but as reference eg @not(...)
+  'IV': 'ref',        #value is non-null, non-blank
+  'NV': 'ref',        #value is null or blank
 
   # Keywords (reserved references)
-  'abort': 'ref',     #kill entire response w/o sending anything
-  'stop': 'ref',      #stop further addition to response.. parse it and send
-  'cookie': 'ref',    #assign a cookie to client
-  'httpGET': 'ref',   #try to get data from somewhere
-  'httpPOST': 'ref',  #post something somewhere
-  'output': 'ref',    #sets the current output value
-  'sleep': 'ref',     #sleep? should this be in lang?
-  'wait': 'ref',      #wait? should this be in lang?
+  'ABORT': 'ref',     #kill entire response w/o sending anything
+  'STOP': 'ref',      #stop further addition to response.. parse it and send
+  'COOKIE': 'ref',    #assign a cookie to client
+  'HTTPGET': 'ref',   #try to get data from somewhere
+  'HTTPPOST': 'ref',  #post something somewhere
+  'OUTPUT': 'ref',    #sets the current output value
+  'SLEEP': 'ref',     #time before continuing response
+  'WAIT': 'ref',      #time before continuing ANY responses
 
-  'rspns_header': 'ref',
-  'rspns_redir': 'ref',
+  'RSPNS_HEADER': 'ref',
+  'RSPNS_REDIR': 'ref',
 
-  'calc': 'ref',
-  'min': 'ref',
-  'max': 'ref',
+  'CALC': 'ref',
+  'MIN': 'ref',
+  'MAX': 'ref',
 
-  'chr': 'ref',
-  'ord': 'ref',
+  'CHR': 'ref',
+  'ORD': 'ref',
 
-  'date': 'ref',    #@date(12/25/2025 13:05:17:999) returns date as float .. @now() if no arg
-  'now': 'ref',     #datetime right now as float
-  'today': 'ref',   #date with 00:00:00 time as float
+  'DATE': 'ref',    #@date(12/25/2025 13:05:17:999) returns date as float .. @now() if no arg
+  'NOW': 'ref',     #datetime right now as float
+  'TODAY': 'ref',   #date with 00:00:00 time as float
 
-  'guid': 'ref',    #returns global identifier string
-  'random': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
+  'GUID': 'ref',    #returns global identifier string
+  'RANDOM': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
 
-  'def': 'ref',       #function
-  'global': 'ref',    #gets a module level or global var for the function
-  'nonlocal': 'ref',  #gets a var one scope above the function
-  'print': 'ref',
-  'return': 'ref',
+  'DEF': 'ref',       #function
+  'GLOBAL': 'ref',    #gets a module level or global var for the function
+  'NONLOCAL': 'ref',  #gets a var one scope above the function
+  'PRINT': 'ref',
+  'RETURN': 'ref',
 
-  'type': 'ref',
-  'class': 'ref',
-  'object': 'ref',
-  'this': 'ref',
-  'self': 'ref',
+  'CLASS': 'ref',
+  'OBJECT': 'ref',
+  'SELF': 'ref',
 
-  'library': 'ref',
-  'mode': 'ref',
-  'module': 'ref',
+  'LIBRARY': 'ref',
+  'USE': 'ref',
 
-  'tern': 'ref',      #ternary
-  'if': 'ref',        #execute def if expr evals to true
-  'switch': 'ref',    #switch block
-  'when': 'ref',      #when the expr in switch evals to this
-  'else': 'ref',      #when the expr in switch evals to none of the whens
+  'TERN': 'ref',      #ternary
+  'IF': 'ref',        #execute def if expr evals to true
+  'SWITCH': 'ref',    #switch block
+  'WHEN': 'ref',      #when the expr in switch evals to this
+  'ELSE': 'ref',      #when the expr in switch evals to none of the whens
 
-  'const': 'ref',     #immutable, non-reassignable var
-  'global': 'ref',    #makes a variable or const accessible across all modules
-  'var': 'ref',       #mutable unless type explicitly stated in declaration
+  'CONST': 'ref',     #immutable, non-reassignable var
+  'GLOBAL': 'ref',    #makes a variable or const accessible across all modules
+  'VAR': 'ref',       #mutable unless type explicitly stated in declaration
 }
 
 
