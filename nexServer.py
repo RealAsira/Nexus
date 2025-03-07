@@ -32,7 +32,7 @@ def getConfig():
           value = value.strip()
 
           # if value is a boolen
-          if value.lower() in ['true', 'false']:
+          if value.upper() in ['TRUE', 'FALSE']:
             config[setting.strip()] = bool(value)
 
           # if value is a digit
