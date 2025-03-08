@@ -1,9 +1,9 @@
-import nexServerGlobals
+#import nexServerGlobals
 import asyncio
 import datetime
 import os
 import socket
-from nexTokenizer2 import tokenizeScript
+from nexTokenizer import tokenizeScript
 from nexParser import parseTokens
 
 
