@@ -120,7 +120,7 @@ def parseTokens(tokenStack:object) -> object:
         # const, var
         match tokenValue:
           #03/07/2025 removed all, any, either, notany, neither, not
-          #removed so binary comparison operators take precedence and to prevent conflicting keywords 
+          #removed some binary comparison operators take precedence and to prevent conflicting keywords 
           # case 'ALL':
             # """
             # example:
