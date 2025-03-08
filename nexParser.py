@@ -20,7 +20,7 @@ class abstractSyntaxTree:
     self.tree = {}
 
   def update(self, aNode:dict):
-    print(f"Stored parsed node: {aNode}")
+    #print(f"Stored parsed node: {aNode}")
     self.tree.update(aNode)
 
   def clear(self):
@@ -99,17 +99,20 @@ def parseTokens(tokenStack:object) -> object:
 
     # start of script
     if tokenType == 'SCPTSTRT':
-      nodeType = "SCPTSTRT"
-      nodeRef = None
-      nodeName = None
-      nodeLine = tokenLineNumber
-      nodeArgs = []
-
+      # start getting child nodes and appending them to body using [dict].update(...)
       while len(tokenStack.stack) > 0:
-        getNextToken()        # done processing current
-        nodeBody.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children
+        getNextToken()              # done processing current
+        nodeBody.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
+
+      nodeID = 1              # override to first node
+      nodeType = "SCPTSTRT"   # override to SCPTSTRT
+      nodeRef = None          # override to no ref
+      nodeName = None         # override to no name
+      nodeLine = 0            # override to line 0
+      nodeArgs = []           # override to no args
 
       return ({f"{nodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
+
 
     # end of script
     elif tokenType == "SCPTEND":
@@ -123,10 +126,19 @@ def parseTokens(tokenStack:object) -> object:
       getNextToken() # done processing current
       return ({f"{nodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
     
+
+    # catch-all for missing items
     else:
-      print(f"Parser Warning A - {tokenValue} ({tokenType}) not implemented in parser yet.")
-      getNextToken()
-      return ({f"{nodeID}": {"nodeType": 'NONE', "nodeRef": 'NONE', "nodeName": 'NONE', "nodeLineNumber": 'NONE', "nodeArgs": 'NONE', "nodeBody": 'NONE'}})
+      print(f"Parser Warning A - {tokenValue} ({tokenType}) not implemented in parser yet. Attempted to create node anyway.")
+      nodeType = tokenType
+      nodeRef = None
+      nodeName = None
+      nodeLine = tokenLineNumber
+      nodeArgs = []
+      nodeBody = {}
+
+      getNextToken()  # done processing current
+      return ({f"{nodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
       
 
 
@@ -141,7 +153,6 @@ def parseTokens(tokenStack:object) -> object:
     currentNode = getNode()   # get the next node
     AST.update(currentNode)   # put into tree
     currentNode = None        # reset for next node
-    print(currentNode)
 
   print (json.dumps(AST.tree, indent=2))
   return (AST)
