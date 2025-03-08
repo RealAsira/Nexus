@@ -42,53 +42,13 @@ def parseTokens(tokenStack:object) -> object:
   tokenType:str = None        # currentToken[1]
   tokenValue:any = None       # currentToken[2]
   
-  # parts of a node
+  node:dict = {}          # completed node
   nodeID:int = 1          # inc IDs so each node has a unique ID#
-  nodeType:str = None     # ref, type, etc
-  nodeRef:str = None      # ie var, def, calc
-  nodeName:str = None     # ie var BAR, def FOO class AST
-  nodeLine:int = None     # self-explanatory
-  nodeArgs:list = []      # any args that node needs to function
-  nodeBody:dict = {}      # child nodes
-
-
-
-  # inc nodeID, reset temp token and node data
-  def resetForNextNode() -> None:
-    nonlocal currentToken
-    nonlocal tokenLineNumber
-    nonlocal tokenType
-    nonlocal tokenValue
-
-    currentToken = None
-    tokenLineNumber = None
-    tokenType = None
-    tokenValue = None
-
-    nonlocal nodeID
-    nonlocal nodeType
-    nonlocal nodeName
-    nonlocal nodeRef
-    nonlocal nodeLine
-    nonlocal nodeArgs
-    nonlocal nodeBody
-
-    nodeID += 1
-    nodeType = None
-    nodeRef = None
-    nodeName = None
-    nodeLine = None
-    nodeArgs = []
-    nodeBody = {}
-
 
 
   # unpack current token into parts
   def getNextToken()->None:
-    nonlocal currentToken
-    nonlocal tokenLineNumber
-    nonlocal tokenType
-    nonlocal tokenValue
+    nonlocal currentToken, tokenLineNumber, tokenType, tokenValue
 
     # ensure token data is clean by erasing previous
     currentToken = None
@@ -108,34 +68,22 @@ def parseTokens(tokenStack:object) -> object:
 
   # will return nodes and child nodes if the node has a "definition" (eg func declares, etc within {...} )
   def getNode():
-    nonlocal currentToken
-    nonlocal tokenLineNumber
-    nonlocal tokenType
-    nonlocal tokenValue
+    nonlocal currentToken, tokenLineNumber, tokenType, tokenValue
+    nonlocal nodeID         # inc IDs so each node has a unique ID#
 
-    ...
-
-
-
-  # process tokens into nodes
-  while True:
-    # if stack is empty then go on to interpretting else get the next token
-    if len(tokenStack.stack) <= 0: break
-    else: getNextToken()
-
+    nodeID += 1             # inc to next nodeID
+    nodeType:str = None     # ref, type, etc
+    nodeRef:str = None      # ie var, def, calc
+    nodeName:str = None     # ie var BAR, def FOO class AST
+    nodeLine:int = None     # self-explanatory
+    nodeArgs:list = []      # any args that node needs to function
+    nodeBody:dict = {}      # child nodes
 
     # start of script
     if tokenType == 'SCPTSTRT':
-      nodeType = "SCPTSTRT"
-      nodeRef = None
-      nodeName = None
-      nodeLine = tokenLineNumber
-      nodeArgs = None
-      nodeBody = {} # THIS NEEDS TO BE ENTRY POINT TO RECURSIVE/NESTED NODES! THIS CURRENTLY DOES NOT HAPPEN
-      print('NODE:', nodeType, nodeRef, nodeName, nodeLine, nodeArgs, nodeBody)
-      resetForNextNode()
-      continue
+      rootNodeBody = {} # THIS NEEDS TO BE ENTRY POINT TO RECURSIVE/NESTED NODES! THIS CURRENTLY DOES NOT HAPPEN
 
+      return {"nodeID": 0, "nodeType": "SCPTSTRT", "nodeRef": None, "nodeName": None, "nodeLine": 0, "nodeArgs": [], "nodeBody": rootNodeBody}
 
     # end of script
     elif tokenType == 'SCPTEND':
@@ -143,26 +91,21 @@ def parseTokens(tokenStack:object) -> object:
       nodeRef = None
       nodeName = None
       nodeLine = tokenLineNumber
-      nodeArgs = None
+      nodeArgs = []
       nodeBody = {}
-      print('NODE:', nodeType, nodeRef, nodeName, nodeLine, nodeArgs, nodeBody)
-      resetForNextNode()
-      break
 
+      return{"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLine": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}
 
     # start of an expression
     elif tokenType == 'EXPRSTRT':
       print(f"3. {currentToken}")
-
       # next token will dictate how to process
       getNextToken() 
-
       # tokenValue instead of tokenType because checking if the value of the type is in refTypeTokens
       if not tokenValue in refTypeTokens:
         # this is a call to a developer defined expression
         print(f"3. {currentToken}")
-        continue
-      
+
       else:
         # then this is a built in expression... list of possible values:
         # all, any, either, notAny, neither, not, iv, nv
@@ -185,9 +128,8 @@ def parseTokens(tokenStack:object) -> object:
               # returns true if all args evaluate to bool 1
             # """
             # print(currentToken)
-            # continue
-# 
-# 
+
+
           # case 'ANY':
             # """
             # example:
@@ -195,9 +137,8 @@ def parseTokens(tokenStack:object) -> object:
               # returns true if any arg is evaluated to bool 1
             # """
             # print(currentToken)
-            # continue
-#
-# 
+
+
           # case 'either':
             # """
             # example:
@@ -205,9 +146,8 @@ def parseTokens(tokenStack:object) -> object:
               # returns true if either arg is evaluated to bool 1
             # """
             # print(currentToken)
-            # continue
-# 
-#
+
+
           # case 'neither':
             # """
             # example:
@@ -215,9 +155,8 @@ def parseTokens(tokenStack:object) -> object:
               # returns true if all args are evaluated to bool 0
             # """
             # print (currentToken)
-            # continue
-# 
-#
+
+
           # case 'notAny':
             # """
             # example:
@@ -225,9 +164,8 @@ def parseTokens(tokenStack:object) -> object:
               # returns true if all args are evaluated to bool 0
             # """
             # print(currentToken)
-            # continue
-# 
-#
+
+
           # case 'not':
             # """
             # example:
@@ -235,7 +173,6 @@ def parseTokens(tokenStack:object) -> object:
               # returns inverse of bool value
             # """
             # print(currentToken)
-            # continue
 
 
           case 'IV':
@@ -245,7 +182,6 @@ def parseTokens(tokenStack:object) -> object:
               returns true if bool 1, true, or expression has a non-0, non-null, non-blank value
             """
             print(currentToken)
-            continue
 
 
           case 'NV':
@@ -255,7 +191,6 @@ def parseTokens(tokenStack:object) -> object:
               returns true if bool 0, false, or expression has a 0, null, blank value
             """
             print(currentToken)
-            continue
 
 
           case 'ABORT':
@@ -265,7 +200,6 @@ def parseTokens(tokenStack:object) -> object:
               aborts response and doesn't send it
             """
             print(currentToken)
-            continue
 
 
           case 'STOP':
@@ -275,7 +209,6 @@ def parseTokens(tokenStack:object) -> object:
               stops response and sends what is already available
             """
             print(currentToken)
-            continue
 
 
           case 'COOKIE':
@@ -285,7 +218,6 @@ def parseTokens(tokenStack:object) -> object:
               sends a cookie to the client
             """
             print(currentToken)
-            continue
 
 
           case 'HTTPGET':
@@ -296,7 +228,6 @@ def parseTokens(tokenStack:object) -> object:
               .. assign as a value to a variable to use (@var result = @httpGet(...))
             """
             print(currentToken)
-            continue
 
 
           case 'HTTPPOST':
@@ -306,7 +237,6 @@ def parseTokens(tokenStack:object) -> object:
               posts data to another server .. no return value
             """
             print(currentToken)
-            continue
 
 
           case 'OUTPUT':
@@ -316,7 +246,6 @@ def parseTokens(tokenStack:object) -> object:
               what the server's response content is
             """
             print(currentToken)
-            continue
 
 
           case 'SLEEP':
@@ -326,7 +255,6 @@ def parseTokens(tokenStack:object) -> object:
               time before continuing this response
             """
             print(currentToken)
-            continue
 
 
           case 'WAIT':
@@ -337,7 +265,6 @@ def parseTokens(tokenStack:object) -> object:
               PAUSES ALL RESPONSES
             """
             print(currentToken)
-            continue
 
 
           case 'RSPNS_HEADER':
@@ -347,7 +274,6 @@ def parseTokens(tokenStack:object) -> object:
               add a header to the response
             """
             print(currentToken)
-            continue
 
 
           case 'RSPNS_REDIR':
@@ -357,7 +283,6 @@ def parseTokens(tokenStack:object) -> object:
               redirect client to new page
             """
             print(currentToken)
-            continue
 
 
           case 'CALC':
@@ -367,7 +292,6 @@ def parseTokens(tokenStack:object) -> object:
               calculates the value of a mathematical or binary expression
             """
             print(currentToken)
-            continue
 
 
           case 'MIN':
@@ -377,7 +301,6 @@ def parseTokens(tokenStack:object) -> object:
               returns smallest value
             """
             print(currentToken)
-            continue
 
 
           case 'MAX':
@@ -387,7 +310,6 @@ def parseTokens(tokenStack:object) -> object:
               returns largest value
             """
             print(currentToken)
-            continue
 
 
           case 'CHR':
@@ -397,7 +319,6 @@ def parseTokens(tokenStack:object) -> object:
               returns the ordinal value of an ASCII character ie @chr(64) -> @
             """
             print(currentToken)
-            continue
 
 
           case 'ORD':
@@ -407,7 +328,6 @@ def parseTokens(tokenStack:object) -> object:
               returns the character value of an ASCII ordinal ie @chr(|) -> 124
             """
             print(currentToken)
-            continue
 
 
           case 'DATE':
@@ -418,8 +338,7 @@ def parseTokens(tokenStack:object) -> object:
               1-2 args: returns datetime as float value
             """
             print(currentToken)
-            continue
-            
+
 
           case 'NOW':
             """
@@ -428,7 +347,6 @@ def parseTokens(tokenStack:object) -> object:
               returns right now's datetime as float value
             """
             print(currentToken)
-            continue
 
 
           case 'TODAY':
@@ -438,7 +356,6 @@ def parseTokens(tokenStack:object) -> object:
               returns today's date, at 00:00:00:000, as float value
             """
             print(currentToken)
-            continue
 
 
           case 'GUID':
@@ -448,7 +365,6 @@ def parseTokens(tokenStack:object) -> object:
               returns a random alphanumeric string xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
             """
             print(currentToken)
-            continue
 
 
           case 'RANDOM':
@@ -459,7 +375,6 @@ def parseTokens(tokenStack:object) -> object:
               1 arg - random number up to that value, including same number of decimal points
             """
             print(currentToken)
-            continue
 
 
           case 'DEF':
@@ -469,7 +384,6 @@ def parseTokens(tokenStack:object) -> object:
               this is a function
             """
             print(currentToken)
-            continue
 
 
           case 'GLOBAL':
@@ -479,7 +393,6 @@ def parseTokens(tokenStack:object) -> object:
               allows use of global variable in a func/method
             """
             print(currentToken)
-            continue
 
 
           case 'NONLOCAL':
@@ -489,7 +402,6 @@ def parseTokens(tokenStack:object) -> object:
               allows use of a variable at one scope up in a func/method (cascades)
             """
             print(currentToken)
-            continue
 
 
           case 'PRINT':
@@ -499,7 +411,6 @@ def parseTokens(tokenStack:object) -> object:
               prints value to terminal cast as string
             """
             print(currentToken)
-            continue
 
 
           case 'RETURN':
@@ -509,7 +420,6 @@ def parseTokens(tokenStack:object) -> object:
               returns value as literal:type from func/method to program
             """
             print(currentToken)
-            continue
 
 
           case 'CLASS':
@@ -518,7 +428,6 @@ def parseTokens(tokenStack:object) -> object:
             UNFINISHED
             """
             print(currentToken)
-            continue
 
 
           case 'OBJECT':
@@ -527,7 +436,6 @@ def parseTokens(tokenStack:object) -> object:
             UNFINISHED
             """
             print(currentToken)
-            continue
 
 
           case 'SELF':
@@ -537,7 +445,6 @@ def parseTokens(tokenStack:object) -> object:
               reference to containing class
             """
             print(currentToken)
-            continue
 
 
           case 'LIBRARY':
@@ -547,7 +454,6 @@ def parseTokens(tokenStack:object) -> object:
               use the modules in this library as part of program
             """
             print(currentToken)
-            continue
 
 
           case 'USE':
@@ -557,7 +463,6 @@ def parseTokens(tokenStack:object) -> object:
               goto/use this module here
             """
             print(currentToken)
-            continue
 
 
           case 'TERN':
@@ -567,8 +472,7 @@ def parseTokens(tokenStack:object) -> object:
               returns one value or another depending on conditional result
             """
             print(currentToken)
-            continue
-            
+
 
           case 'IF':
             """
@@ -577,7 +481,6 @@ def parseTokens(tokenStack:object) -> object:
               execute definition if conditional is true
             """
             print(currentToken)
-            continue
 
 
           case 'SWITCH':
@@ -587,7 +490,6 @@ def parseTokens(tokenStack:object) -> object:
               execute one of the definition depending on resulting value of expression
             """
             print(currentToken)
-            continue
 
 
           case 'WHEN':
@@ -597,7 +499,6 @@ def parseTokens(tokenStack:object) -> object:
               execute this definition when value matches that of parent switch
             """
             print(currentToken)
-            continue
 
 
           case 'ELSE':
@@ -607,7 +508,6 @@ def parseTokens(tokenStack:object) -> object:
               execute this definition when no previous when statements nested in same parent switch definition match switch expression value
             """
             print(currentToken)
-            continue
 
 
           case 'VAR':
@@ -629,7 +529,7 @@ def parseTokens(tokenStack:object) -> object:
               nodeName = tokenValue
             else:
               raise Exception(f"Syntax error on line {tokenLineNumber}): Expected argument NAME but got {tokenValue}({tokenType}).")
-            
+
             # check for exprType syntax (char :)
             getNextToken()
             if tokenType != "EXPRTYPE": raise Exception(f"Syntax error on line {tokenLineNumber}: Expected type declarator (: character) but got {tokenValue}({tokenType}).")
@@ -640,12 +540,11 @@ def parseTokens(tokenStack:object) -> object:
               nodeArgs.append({"EXPRTYPE": f"{tokenValue}"})
             else:
               raise Exception(f"Syntax error on line {tokenLineNumber}: Expected TYPE but got {tokenValue}({tokenType}).")
-          
+
             nodeBody = None # no nodeBody for var
 
-            print('NODE:', nodeType, nodeRef, nodeName, nodeLine, nodeArgs, nodeBody)
-            resetForNextNode()
-            continue
+            return {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLine": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}
+
 
 
           case 'CONST':
@@ -656,7 +555,6 @@ def parseTokens(tokenStack:object) -> object:
               type and value are both immutable once assigned
             """
             print(currentToken)
-            continue
 
 
           case _:
@@ -667,6 +565,20 @@ def parseTokens(tokenStack:object) -> object:
     else:
       print(f"Parser Warning B - {tokenValue} ({tokenType}) not implemented in parser yet! ")
 
+    #print(currentToken)
 
-    # print(currentToken)
-    
+
+
+  # process tokens into nodes
+  while True:
+    # if stack is empty then go on to interpretting else get the next token
+    if len(tokenStack.stack) <= 0: break
+    else: getNextToken()
+
+    node = getNode()
+    try:
+      print(node.get('nodeID'), node)
+    except:
+      pass
+    node = {}
+    nodeID += 1
