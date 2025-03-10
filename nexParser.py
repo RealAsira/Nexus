@@ -80,8 +80,8 @@ def parseTokens(tokenStack:object) -> object:
     nodeRef:str = None      # ie var, def, calc, etc
     nodeName:str = None     # ie var BAR, def FOO class AST (bar, foo, ast)
     nodeLine:int = None     # line number
-    nodeArgs:list = []      # any args that node needs to function
-    nodeBody:dict = {}      # child nodes (eg function definition)
+    nodeArgs:dict = {}      # any args that node needs to function... non-iterative and applies only to this node
+    nodeBody:dict = {}      # child nodes (eg function definition... iterative and can be many layers deep)
 
 
     def formattedNode(thisNodeID:int=nodeID):
@@ -99,7 +99,7 @@ def parseTokens(tokenStack:object) -> object:
       nodeRef = None          # override to no ref
       nodeName = None         # override to no name
       nodeLine = 0            # override to line 0
-      nodeArgs = []           # override to no args
+      nodeArgs = {}           # override to no args
     
       # start getting child nodes and appending them to body using [dict].update(...)
       while len(tokenStack.stack) > 0:
@@ -114,7 +114,7 @@ def parseTokens(tokenStack:object) -> object:
       nodeRef = None          # override to no ref
       nodeName = None         # override to no name
       nodeLine = tokenLineNumber
-      nodeArgs = []           # override to no args
+      nodeArgs = {}           # override to no args
       nodeBody = {}           # override to no body
 
       return(formattedNode())
@@ -127,7 +127,7 @@ def parseTokens(tokenStack:object) -> object:
       nodeRef = None
       nodeName = None
       nodeLine = tokenLineNumber
-      nodeArgs = []
+      nodeArgs = {}
 
       # all following nodes are children until this expression ends
       while True:
@@ -155,8 +155,189 @@ def parseTokens(tokenStack:object) -> object:
       const, var
       """
       match tokenValue:
-        #case "VAR":
-        #  ...
+        case "IV":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "NV":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "ABOR":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "STOP":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "COOKIE":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "HTTPGET":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "HTTPPOST":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "OUTPUT":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "SLEEP":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "WAIT":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "RSPNS_HEADER":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "RASPNS_REDIR":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "CALC":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "MIN":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "MAX":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "CHR":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "ORD":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "DATE":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "NOW":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "TODAY":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "GUID":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "RANDOM":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "DEF":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "GETGLOBAL":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "NONLOCAL":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "PRINT":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "RETURN":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "CLASS":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "OBJECT":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "SELF":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "LIBRARY":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "USE":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "TERN":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "IF":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "SWITCH":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "WHEN":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "ELSE":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "CONST":
+          print(f"Parser Warning C - REF-typed token {tokenValue} is not implemented in parser yet but a placeholder has been made. No node was created!")
+        
+
+        case "VAR":
+          """
+          example: @var bar:int = 5;
+          @var [name]:[type] [(optional) = [value]];
+          """
+          nodeType = "REF"
+          nodeRef = "VAR"
+          #nodeName
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
+
+          # next token should be arg [name]
+          getNextToken()
+          if tokenType == "ARG":
+            nodeName = tokenValue
+          else:
+            raise Exception(f"Variable expecting argument NAME but found {tokenValue}({tokenType}) instead.")
+          
+          # next token should be : (type-indicator)
+          getNextToken()
+          if not tokenType == "EXPRTYPE":
+            raise Exception(f"Variable expecting TYPE-INDICATOR (:) but found {tokenValue}({tokenType}) instead.")
+
+          # the exprType token doesn't contain the type itself
+          getNextToken()          
+          if tokenType == "TYPE":
+            nodeArgs.update({"returnType":tokenValue})
+
+          return(formattedNode())
+        
 
         case _:
           print(f"Parser Warning B - REF-typed token {tokenValue} is not implemented in parser yet. Attempted to create node anyway.")
@@ -164,7 +345,7 @@ def parseTokens(tokenStack:object) -> object:
           nodeRef = tokenValue
           nodeName = "MISSING"
           nodeLine = tokenLineNumber
-          nodeArgs = []
+          nodeArgs = {}
           nodeBody = {}
 
           return(formattedNode())
@@ -177,7 +358,7 @@ def parseTokens(tokenStack:object) -> object:
       nodeRef = None
       nodeName = tokenValue
       nodeLine = tokenLineNumber
-      nodeArgs = []
+      nodeArgs = {}
       nodeBody = {}
 
       #getNextToken()  # done processing current
@@ -185,7 +366,7 @@ def parseTokens(tokenStack:object) -> object:
       
 
 
-  # SUB FUNCTIONS, ETC
+  # initialize the building of the node tree
   if currentNode is None:
     currentNode = getNode()
 
