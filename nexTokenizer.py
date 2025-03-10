@@ -7,7 +7,7 @@ allReservedTokens = nexServerGlobals.allReservedTokens
 exprTypeTokens = nexServerGlobals.exprTypeTokens
 stringDelimTokens = nexServerGlobals.stringDelimTokens
 xmlDelimTokens = nexServerGlobals.xmlDelimTokens
-refTypeTokens = nexServerGlobals.refTypeTokens
+refTokens = nexServerGlobals.refTokens
 
 
 
@@ -46,7 +46,7 @@ tokenStack = tokenStack()
 def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> object:
   global allReservedTokens, stringDelimTokens, xmlDelimTokens
   #global exprTypeTokens
-  #global refTypeTokens
+  #global refTokens
 
   currentToken:str = None
   tokenLineNumber:int = 1         # file line number for where token is at
