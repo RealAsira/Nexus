@@ -9,7 +9,7 @@ allReservedTokens = nexServerGlobals.allReservedTokens
 exprTypeTokens = nexServerGlobals.exprTypeTokens
 stringDelimTokens = nexServerGlobals.stringDelimTokens
 xmlDelimTokens = nexServerGlobals.stringDelimTokens
-refTypeTokens = nexServerGlobals.refTypeTokens
+refTokens = nexServerGlobals.refTokens
 
 
 
@@ -39,7 +39,7 @@ def parseTokens(tokenStack:object) -> object:
   #global exprTypeTokens
   #global stringDelimTokens
   #global xmlDelimTokens
-  #global refTypeTokens
+  #global refTokens
 
   currentNode:dict = {}       # temp container for current node to be stored
   nodeID:int = 0              # unique id for each node
@@ -83,62 +83,105 @@ def parseTokens(tokenStack:object) -> object:
     nodeArgs:list = []      # any args that node needs to function
     nodeBody:dict = {}      # child nodes (eg function definition)
 
-    """
-    Each node some to most of the following:
-    nodeID          - unique id for each node
-    nodeType        - the type of node (such as ref)
-    nodeRef         - sub type (such as var)
-    nodeName        - a name assigned to the node
-    nodeLineNumber  - the line number where the node was found
-    nodeArgs        - additional args for the node
-    nodeBody        - any definition (eg function defs, etc)
-    """
+
+    def formattedNode(thisNodeID:int=nodeID):
+      nonlocal nodeID, nodeType, nodeRef, nodeName, nodeLine, nodeArgs, nodeBody
+      return({f"{thisNodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
+
 
     # get the next token to process into the node
-    if currentToken == None: getNextToken()
+    getNextToken()
 
     # start of script
     if tokenType == 'SCPTSTRT':
-      # start getting child nodes and appending them to body using [dict].update(...)
-      while len(tokenStack.stack) > 0:
-        getNextToken()              # done processing current
-        nodeBody.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
-
-      nodeID = 1              # override to first node
-      nodeType = "SCPTSTRT"   # override to SCPTSTRT
+      thisNodeID = nodeID     # preserveNodeID
+      nodeType = tokenType    # start of script
       nodeRef = None          # override to no ref
       nodeName = None         # override to no name
       nodeLine = 0            # override to line 0
       nodeArgs = []           # override to no args
+    
+      # start getting child nodes and appending them to body using [dict].update(...)
+      while len(tokenStack.stack) > 0:
+        nodeBody.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
 
-      return ({f"{nodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
+      return(formattedNode(thisNodeID))
 
 
     # end of script
     elif tokenType == "SCPTEND":
-      nodeType = "SCPTEND"
+      nodeType = tokenType    # end of script
+      nodeRef = None          # override to no ref
+      nodeName = None         # override to no name
+      nodeLine = tokenLineNumber
+      nodeArgs = []           # override to no args
+      nodeBody = {}           # override to no body
+
+      return(formattedNode())
+
+
+    # start of an expression
+    elif tokenType == "EXPRSTRT":
+      thisNodeID = nodeID
+      nodeType = tokenType
       nodeRef = None
       nodeName = None
       nodeLine = tokenLineNumber
       nodeArgs = []
-      nodeBody = {}
 
-      getNextToken() # done processing current
-      return ({f"{nodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
-    
+      # all following nodes are children until this expression ends
+      while True:
+        if tokenType == "EXPREND": break
+        nodeBody.update(getNode())
+
+      return(formattedNode(thisNodeID))
+
+
+    # for built in expressions such as var, def, class, etc
+    elif tokenType == "REF":
+      """
+      List of built-in ref-typed expressions
+      iv, nv,
+      abort, stop, cookie, httpget, httppost, output, sleep, wait,
+      rspns_header, rspns_redir,
+      calc, min, max,
+      chr, ord,
+      date, now, today,
+      guid, random,
+      def, getglobal, nonlocal, print, return,
+      class, object, self,
+      library, use
+      tern, if, switch, when, else,
+      const, var
+      """
+      match tokenValue:
+        #case "VAR":
+        #  ...
+
+        case _:
+          print(f"Parser Warning B - REF-typed token {tokenValue} is not implemented in parser yet. Attempted to create node anyway.")
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "MISSING"
+          nodeLine = tokenLineNumber
+          nodeArgs = []
+          nodeBody = {}
+
+          return(formattedNode())
+
 
     # catch-all for missing items
     else:
       print(f"Parser Warning A - {tokenValue} ({tokenType}) not implemented in parser yet. Attempted to create node anyway.")
       nodeType = tokenType
       nodeRef = None
-      nodeName = None
+      nodeName = tokenValue
       nodeLine = tokenLineNumber
       nodeArgs = []
       nodeBody = {}
 
-      getNextToken()  # done processing current
-      return ({f"{nodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
+      #getNextToken()  # done processing current
+      return(formattedNode())
       
 
 
@@ -154,5 +197,5 @@ def parseTokens(tokenStack:object) -> object:
     AST.update(currentNode)   # put into tree
     currentNode = None        # reset for next node
 
-  print (json.dumps(AST.tree, indent=2))
+  print(json.dumps(AST.tree, indent=2))
   return (AST)

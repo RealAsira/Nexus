@@ -97,7 +97,7 @@ allReservedTokens:dict = {
   'RANDOM': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
 
   'DEF': 'ref',       #function
-  'GLOBAL': 'ref',    #gets a module level or global var for the function
+  'GETGLOBAL': 'ref',    #gets a module level or global var for the function
   'NONLOCAL': 'ref',  #gets a var one scope above the function
   'PRINT': 'ref',
   'RETURN': 'ref',
@@ -122,7 +122,6 @@ allReservedTokens:dict = {
   'ANY': 'type',      #a generic type that will attempt to determine the actual type when called
   'BLANK': 'type',    #value is "empty" or "blank"
   'NULL': 'type',     #has no value, not even blank
-  'NONE': 'type',     #func/method doesn't return a value
   'STR': 'type',
     
   'LIST': 'type',       #data structure array/list
@@ -143,7 +142,7 @@ allReservedTokens:dict = {
   'UTF8': 'type',       #encoded data in UTF8
     
   # Special Args (args to modify behavior of expression)
-  'GLBOAL': 'spArg',      #makes this variable globally scoped
+  'GLOBAL': 'spArg',      #makes this variable globally scoped
   'DISABLE': 'spArg',     #disables this block entirely
   'NOINTERPRET': 'spArg', #returns block as string literal
 }
@@ -155,7 +154,6 @@ exprTypeTokens = {
   'ANY': 'type',      #a generic type that will attempt to determine the actual type when called
   'BLANK': 'type',    #value is "empty" or "blank"
   'NULL': 'type',     #has no value, not even blank
-  'NONE': 'type',     #func/method doesn't return a value
   'STR': 'type',
     
   'LIST': 'type',       #data structure array/list
@@ -178,14 +176,14 @@ exprTypeTokens = {
 
 
 # built-in references pointing to built-in functionality
-refTypeTokens = {
+refTokens = {
   # Binary-ish Comparison
   #'ALL': 'ref',       #@all() - ie several chained &&    
   #'ANY': 'ref',       #several chained ||
   #'EITHER': 'ref',    #like any but only two expressions
   #'NOTANY': 'ref',    #!(@any)... @not(@any(...))
   #'NEITHER': 'ref',   #like none but only two expressions
-  #'NOT': 'ref',       #same as !(...) but as reference eg @not(...)
+  #'NOT': 'ref',       #same as !() but as reference
   'IV': 'ref',        #value is non-null, non-blank
   'NV': 'ref',        #value is null or blank
 
@@ -209,7 +207,7 @@ refTypeTokens = {
   'CHR': 'ref',
   'ORD': 'ref',
 
-  'DATE': 'ref',    #@date(12/25/2025 13:05:17:999) returns date as float .. @now() if no arg
+  'DATE': 'ref',    #@date('12/25/2025', '13:05:17:999') returns date as float .. @now() if no arg
   'NOW': 'ref',     #datetime right now as float
   'TODAY': 'ref',   #date with 00:00:00 time as float
 
@@ -217,7 +215,7 @@ refTypeTokens = {
   'RANDOM': 'ref',  #@random(967) returns int 0-967 .. @random(451.07) returns float 0.00-451.07 
 
   'DEF': 'ref',       #function
-  'GLOBAL': 'ref',    #gets a module level or global var for the function
+  'GETGLOBAL': 'ref',    #gets a module level or global var for the function
   'NONLOCAL': 'ref',  #gets a var one scope above the function
   'PRINT': 'ref',
   'RETURN': 'ref',
@@ -236,7 +234,6 @@ refTypeTokens = {
   'ELSE': 'ref',      #when the expr in switch evals to none of the whens
 
   'CONST': 'ref',     #immutable, non-reassignable var
-  'GLOBAL': 'ref',    #makes a variable or const accessible across all modules
   'VAR': 'ref',       #mutable unless type explicitly stated in declaration
 }
 
