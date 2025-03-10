@@ -271,9 +271,9 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
         continue
 
 
-      # the currentToken is a reserved token and needs to be stored
-      elif currentToken.upper() in allReservedTokens:
-        #print(f"Stored token as reserved token {reservedTokens[currentToken]} {currentToken}")
+      # the currentToken is a reserved token and needs to be stored ... don't store new-lines
+      elif currentToken.upper() in allReservedTokens and allReservedTokens[currentToken.upper()].upper() != "NL":
+        #print(f"Stored token as reserved token {allReservedTokens[currentToken.upper()]} {currentToken}")
         tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken.upper()].upper(), currentToken.upper())
         pos += len(currentToken)
         currentToken = None
