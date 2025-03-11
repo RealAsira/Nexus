@@ -18,8 +18,8 @@ sockets:list = []            # hosts/ports to bind to
 
 
 
-# IMPORT SERVER CONFIGURATION ... PARSE INTO config OBJECT
-def getConfig():
+def getConfig()->None:
+  """Import server configuration and parse into config list"""
   global config
   try:
     with open('nexServer.config', 'r') as nexServer_config:
@@ -55,8 +55,8 @@ def getConfig():
 
 
 
-# CONFIGURE SOCKETS ARRAY FROM HOSTS/PORTS IN CONFIG OBJECT
-def setupSockets():
+def setupSockets()->None:
+  """Configure sockets array from hosts/ports in config object"""
   global config
   global sockets
 
@@ -94,8 +94,8 @@ def setupSockets():
 
 
 
-# PARSE THE REQUEST INTO SOMETHING USABLE
 def parseRequest(request:str):
+  """Parse client request into usable parts"""
   global request_headers
   request_headers = {}
 
@@ -120,8 +120,8 @@ def parseRequest(request:str):
 
 
 
-# SETUP HEADERS AND RUN RESPONSE THROUGH TOKENIZER, PARSER, AND INTERPRETTER
 def constructResponse() -> bytes:
+  """Setup initial headers then run response through tokenizer, parser, and interpretter"""
   global response_headers
   global response_content
 
@@ -220,7 +220,8 @@ if __name__ == "__main__":
 
 
 
-async def handleRequest(reader, writer):
+async def handleRequest(reader, writer)->None:
+  """Handle a client request"""
   request = await reader.read(1024)
   clientAddr = writer.get_extra_info('peername')
 
@@ -242,7 +243,8 @@ async def handleRequest(reader, writer):
 
 
 # LISTEN ON EACH SOCKET ASYNC'd
-async def startServer():
+async def startServer()->None:
+  """Initialize the server"""
   # async'd server tasks
   tasks:list = []
 
