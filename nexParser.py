@@ -20,10 +20,12 @@ class abstractSyntaxTree:
     self.tree = {}
 
   def update(self, aNode:dict):
+    """Accepts dictionary that is updated/appened to the AST"""
     #print(f"Stored parsed node: {aNode}")
     self.tree.update(aNode)
 
   def clear(self):
+    """Clears entire AST"""
     self.tree.clear()
 
 AST = abstractSyntaxTree()
@@ -35,6 +37,7 @@ AST = abstractSyntaxTree()
 # PARSE TOKENS from tokenizeScript returned object... NEXPARSER ENTRY POINT
 # Returns an Abstract Syntax Tree (AST) as object
 def parseTokens(tokenStack:object) -> object:
+  """Initialize the parsing of tokens"""
   #global allReservedTokens
   #global exprTypeTokens
   #global stringDelimTokens
@@ -52,6 +55,7 @@ def parseTokens(tokenStack:object) -> object:
 
 
   def getNextToken() -> None:
+    """Clear currentToken data and advance to the next token if it exists"""
     nonlocal tokenStack, currentToken, tokenLineNumber, tokenType, tokenValue
 
     # clean the token data
@@ -70,8 +74,13 @@ def parseTokens(tokenStack:object) -> object:
       tokenStack.pop()
 
 
+  def peakNextTokenType()->str:
+    """Peak at the next token type without advancing the stack"""
+    return(tokenStack.stack[0][1])
+
 
   def getNode() -> dict:
+    """Returns all of the information about a node, by processing up the tokenStack starting at the bottom tokenStack.stack[0]"""
     nonlocal tokenStack, currentToken, tokenLineNumber, tokenType, tokenValue
     nonlocal nodeID
 
@@ -84,9 +93,36 @@ def parseTokens(tokenStack:object) -> object:
     nodeBody:dict = {}      # child nodes (eg function definition... iterative and can be many layers deep)
 
 
+    # formats the node as a dictionary
     def formattedNode(thisNodeID:int=nodeID):
+      """Formats the node into a dictionary"""
       nonlocal nodeID, nodeType, nodeRef, nodeName, nodeLine, nodeArgs, nodeBody
       return({f"{thisNodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
+
+    
+    def getTypes()->list:
+      """Gets all the immediately following type declarations for vars, consts, functions, etc"""
+      typeList:list = []
+
+      getNextToken()  # begin with getting a new token (needs to be of type EXPRTYPE (:) )
+      if not tokenType == "EXPRTYPE":
+        raise Exception(f"Syntax Error: Expecting TYPE-INDICATOR (:) but found {tokenValue}({tokenType}) instead.")
+      
+      # TYPE-INDICATOR was found, meaning the loop for finding types can be initiated
+      while True:    
+        getNextToken()  # the exprType token doesn't contain the type itself, so skip it
+
+        if tokenType == "TYPE":
+          typeList.append(tokenValue)
+          if peakNextTokenType() in ["EXPRTYPE", "TYPE"]:
+            getNextToken()
+          else:
+            break # exit once the next token isn't related to types
+          
+        else: 
+          raise Exception(f"{tokenValue}({tokenType}) is not a valid type.")
+        
+      return(typeList)
 
 
     # get the next token to process into the node
@@ -141,18 +177,10 @@ def parseTokens(tokenStack:object) -> object:
     elif tokenType == "REF":
       """
       List of built-in ref-typed expressions
-      iv, nv,
-      abort, stop, cookie, httpget, httppost, output, sleep, wait,
-      rspns_header, rspns_redir,
-      calc, min, max,
-      chr, ord,
-      date, now, today,
-      guid, random,
-      def, getglobal, nonlocal, print, return,
-      class, object, self,
-      library, use
-      tern, if, switch, when, else,
-      const, var
+      iv, nv, abort, stop, cookie, httpget, httppost, output, sleep, wait, rspns_header, rspns_redir,
+      calc, min, max, chr, ord, date, now, today, guid, random,
+      def, getglobal, nonlocal, print, return, class, object, self, library, use
+      tern, if, switch, when, else, const, var
       """
       match tokenValue:
         case "IV":
@@ -326,15 +354,11 @@ def parseTokens(tokenStack:object) -> object:
           else:
             raise Exception(f"Variable expecting argument NAME but found {tokenValue}({tokenType}) instead.")
           
-          # next token should be : (type-indicator)
-          getNextToken()
-          if not tokenType == "EXPRTYPE":
-            raise Exception(f"Variable expecting TYPE-INDICATOR (:) but found {tokenValue}({tokenType}) instead.")
-
-          # the exprType token doesn't contain the type itself
-          getNextToken()          
-          if tokenType == "TYPE":
-            nodeArgs.update({"returnType":tokenValue})
+          # next part of syntax is always :[TYPE] ... or multiple types (the types the variable can be, ie returnTypes)
+          nodeArgs.update({"returnTypes":getTypes()})
+          
+          if peakNextTokenType not in ["OP", "EXPREND"]:
+            raise Exception(f"Variable was expecting ASSIGNMENT (=) or END (;) but found {tokenValue}({tokenType}) instead.")
 
           return(formattedNode())
         

@@ -19,21 +19,22 @@ class tokenStack:
     # [[lineNumber, tokenType, tokenValue], .., ..]
     self.stack = []
 
-  # add token to end of stack
   def insert(self, lineNumber:int, tokenType:str, tokenValue):
+    """Add a token to the top of the stack"""
     #print(f"Stored token from line", lineNumber, 'as', tokenType, tokenValue)
     self.stack.insert(len(self.stack), [int(lineNumber), tokenType.strip().upper(), tokenValue.strip()])
   
-  # remove token from stack (first by default)
   def pop(self, pos:int=0):
+    """Remove a token from the bottom of the stack"""
     self.stack.pop(pos)
   
-  # return first token in stack
   def readCurrentToken(self):
+    """Return the bottom token from the stack, doesn't remove"""
     return self.stack[0]
   
-  # the tokenStack is reused and needs to be cleared between uses
   def clear(self):
+    """Clears the entire token stack"""
+    # the tokenStack is reused and needs to be cleared between uses
     self.stack.clear()
   
 tokenStack = tokenStack()
@@ -42,8 +43,8 @@ tokenStack = tokenStack()
 
 
 
-# process to tokenize a submitted script
 def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> object:
+  """Process a script into a token stack"""
   global allReservedTokens, stringDelimTokens, xmlDelimTokens
   #global exprTypeTokens
   #global refTokens
@@ -59,8 +60,8 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
   pos:int = 0                     # position where is being processed
 
 
-  # returns the position of the next single character token
   def findNextReservedSingleCharToken(searchToken:str = None) -> int:
+    """Returns the position of the next single character reserved token"""
     nonlocal script
     nonlocal pos
     cursor:int = pos
@@ -88,8 +89,8 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
 
 
 
-  # gets and returns the next token
   def getToken() -> str:
+    """Finds and returns the next token"""
     nonlocal script, tokenLineNumber, processingStr, processingStrDelim, processingFStr, processingXML
     
     aToken:str = str(script[pos].upper())
