@@ -210,7 +210,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
     if currentToken is None:
       currentToken = getToken() # now that the token is found, the next step will store it
       #print(f"New token found: {currentToken})
-
+      #print(currentToken, allReservedTokens[currentToken.upper()])
 
       # space character delims tokens ... doesn't get stored
       if currentToken == ' ':
@@ -226,7 +226,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
           isEscaped:bool = True if script[pos-1] == '\\' else False
 
           if isEscaped:
-            tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken].upper(), currentToken.upper())
+            tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken.upper()].upper(), currentToken.upper())
   
           elif not isEscaped:
             #print(f"Stored token as strStrt {currentToken}")
@@ -273,7 +273,13 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
 
 
       # the currentToken is a reserved token and needs to be stored ... don't store new-lines
-      elif currentToken.upper() in allReservedTokens and allReservedTokens[currentToken.upper()].upper() != "NL":
+      elif currentToken.upper() in allReservedTokens:
+        # new line tokens previously counted line number, but shouldn't be stored here
+        if allReservedTokens[currentToken.upper()].upper() == "NL":
+          pos += len(currentToken)
+          currentToken = None
+          continue
+          
         #print(f"Stored token as reserved token {allReservedTokens[currentToken.upper()]} {currentToken}")
         tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken.upper()].upper(), currentToken.upper())
         pos += len(currentToken)
