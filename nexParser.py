@@ -81,6 +81,11 @@ def parseTokens(tokenStack:object) -> object:
     return(tokenStack.stack[0][1])
   
 
+  def peakNextTokenValue()->str:
+    """Peak at the next token value without advancing the stack"""
+    return(tokenStack.stack[0][2])
+  
+
   def peakLastTokenType()->str:
     """Peak at the previous token type without altering the stack"""
     return(lastToken[1])
@@ -129,7 +134,13 @@ def parseTokens(tokenStack:object) -> object:
           raise Exception(f"{tokenValue}({tokenType}) is not a valid type.")
         
       return(typeList)
+    
 
+    def getParams()->list:
+      """Gets all params/args for an expression declaration or call"""
+      print('getParams called but def currently does not function')
+      return({})
+    
 
     # get the next token to process into the node
     getNextToken()
@@ -229,10 +240,7 @@ def parseTokens(tokenStack:object) -> object:
       def, getglobal, nonlocal, print, return, class, object, self, library, use
       tern, if, switch, when, else, const, var
       """
-
-      nodeArgs = {}
-      print("WARNING - REF Expression calls DO NOT generate nodeArgs currently! E.g @def(@var1:any, @var2:any) needs @var1, @var 2 nodeArgs")
-
+      
       match tokenValue:
         #case "IV":
 
@@ -345,33 +353,71 @@ def parseTokens(tokenStack:object) -> object:
         #case "ELSE":
 
 
-        #case "CONST":
-        
+        case "CONST":
+          """
+          example: @const bar:int = 5;
+          @const [name]:[type] = [value];
+          """
+          thisNodeID = nodeID     # preserveNodeID
+          nodeType = "REF"
+          nodeRef = "CONST"
+          #nodeName
+          nodeLine = tokenLineNumber
+          nodeArgs = nodeArgs # use existing nodeArgs REF object
+          nodeBody = {}
+         
+          # next token must be arg [nodeName]
+          getNextToken()
+          if tokenType == "ARG":
+            nodeName = tokenValue
+          else:
+            raise Exception(f"@CONST expecting argument NAME but found {tokenValue}({tokenType}).")
+          
+          # const expression does not require getParams()
+          # next part of syntax is always :[TYPE] (exactly one, not "any"-type)
+          nodeArgs.update({"returnTypes":getTypes()})
+
+          # exactly one type
+          if len(nodeArgs['returnTypes']) > 1 or len(nodeArgs['returnTypes']) == 0:
+            raise Exception(f"@CONST expecting exactly ONE type but found {len(nodeArgs['returnTypes'])} types.")
+          
+          # type can't be "ANY"
+          if nodeArgs['returnTypes'][0] == "ANY":
+            raise Exception(f"@CONST cannot be of type ANY.")
+          
+          # must have a value assigned immediately
+          if peakNextTokenValue() != "=": # using nextTokenValue since there are many types of OP tokenTypes but only one is allowed
+            raise Exception(f"@CONST expecting ASSIGNMENT (=) but found {peakNextTokenValue()}({peakNextTokenType()}).")
+
+          return(formattedNode())
+               
 
         case "VAR":
           """
           example: @var bar:int = 5;
           @var [name]:[type] [(optional) = [value]];
           """
+          thisNodeID = nodeID     # preserveNodeID
           nodeType = "REF"
           nodeRef = "VAR"
           #nodeName
           nodeLine = tokenLineNumber
           nodeArgs = nodeArgs # use existing nodeArgs REF object
           nodeBody = {}
-
-          # next token should be arg [nodeName]
+         
+          # next token must be arg [nodeName]
           getNextToken()
           if tokenType == "ARG":
             nodeName = tokenValue
           else:
-            raise Exception(f"Variable expecting argument NAME but found {tokenValue}({tokenType}) instead.")
+            raise Exception(f"@VAR expecting argument NAME but found {tokenValue}({tokenType}).")
           
+          # var expression does not require getParams()               
           # next part of syntax is always :[TYPE] ... or multiple types (the types the variable can be, ie returnTypes)
           nodeArgs.update({"returnTypes":getTypes()})
           
           if peakNextTokenType() not in ["OP", "EXPREND"]:
-            raise Exception(f"Variable was expecting ASSIGNMENT (=) or END (;) but found {tokenValue}({tokenType}) instead.")
+            raise Exception(f"@VAR expecting ASSIGNMENT (=) or END (;) but found {peakNextTokenValue()}({peakNextTokenType()}).")
 
           return(formattedNode())
         
@@ -387,7 +433,7 @@ def parseTokens(tokenStack:object) -> object:
           nodeBody = {}
 
           return(formattedNode())
-
+        
 
     # for built in operators such as +, =, etc
     elif tokenType == "OP":
@@ -471,9 +517,8 @@ def parseTokens(tokenStack:object) -> object:
         nodeRef = "ARG"
         nodeName = tokenValue
         nodeLine = tokenLineNumber
-        nodeArgs = {}
-        print("WARNING - @BAR REF/ARG Expression calls DO NOT generate nodeArgs currently! E.g @bar(5+5) needs args 5+5")
-        nodeBody = {} # this will always be empty for expression calls
+        nodeArgs.update(getParams())
+        nodeBody = {} # empty or attached methods
         
         return(formattedNode())
 
@@ -498,7 +543,6 @@ def parseTokens(tokenStack:object) -> object:
       nodeArgs = {}
       nodeBody = {}
 
-      #getNextToken()  # done processing current
       return(formattedNode())
       
 
