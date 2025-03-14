@@ -1,2 +1,3 @@
-@var url:str:any = "https://example.com/";
-@url();
+@const msg:str = "goodnight sky"
+@msg();
+@iv();
