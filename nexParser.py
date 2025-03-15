@@ -117,7 +117,7 @@ def parseTokens(tokenStack:object) -> object:
 
       getNextToken()  # begin with getting a new token (needs to be of type EXPRTYPE (:) )
       if not tokenType == "EXPRTYPE":
-        raise Exception(f"Syntax Error: Expecting TYPE-INDICATOR (:) but found {tokenValue}({tokenType}) instead.")
+        raise Exception(f"Syntax Error: Expecting TYPE-INDICATOR (:) but found {tokenValue}({tokenType}).")
       
       # TYPE-INDICATOR was found, meaning the loop for finding types can be initiated
       while True:    
@@ -136,10 +136,23 @@ def parseTokens(tokenStack:object) -> object:
       return(typeList)
     
 
-    def getParams()->list:
+    def getParams()->dict:
       """Gets all params/args for an expression declaration or call"""
-      print('getParams called but def currently does not function')
-      return({})
+      paramDict:dict = {}
+      
+      getNextToken()
+      if not tokenType == "PARENOPN":
+        raise Exception(f"Syntax Error: Expecting start of PARAMS ( but found {tokenValue}({tokenType}).")
+      
+      # PARENOPN was found, meaning the loop finding args/params can be initiated
+      while True:
+        if peakNextTokenType() == "PARENCLS":
+          getNextToken()  # eat parencls so it isn't added to stack
+          break
+        else:
+          paramDict.update(getNode()) # add node as a param
+
+      return(paramDict)
     
 
     # get the next token to process into the node
@@ -195,7 +208,7 @@ def parseTokens(tokenStack:object) -> object:
       nodeType = tokenType
       nodeRef = tokenValue
       nodeName = None
-      nodeLine = tokenLineNumber,
+      nodeLine = tokenLineNumber
       nodeArgs = {}
       nodeBody = {}
 
@@ -242,10 +255,42 @@ def parseTokens(tokenStack:object) -> object:
       """
       
       match tokenValue:
-        #case "IV":
+        case "IV":
+          """
+          example: @iv(1); @iv(@someVar);
+          returns true if expression evaluates to true
+          """
+          thisNodeID = nodeID
+          nodeType = "REF"
+          nodeRef = "IV"
+          nodeName = "ISVALID"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
+
+          # IV always requires params
+          nodeArgs.update({"params":getParams()})
+          
+          return(formattedNode(thisNodeID))        
 
 
-        #case "NV":
+        case "NV":
+          """
+          example: @nv(1); @nv(@someVar);
+          returns true true if expression evaluates to false
+          """
+          thisNodeID = nodeID
+          nodeType = "REF"
+          nodeRef = "IV"
+          nodeName = "ISVALID"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
+
+          # IV always requires params
+          nodeArgs.update({"params":getParams()})
+          
+          return(formattedNode(thisNodeID))     
 
 
         #case "ABORT":
@@ -363,7 +408,7 @@ def parseTokens(tokenStack:object) -> object:
           nodeRef = "CONST"
           #nodeName
           nodeLine = tokenLineNumber
-          nodeArgs = nodeArgs # use existing nodeArgs REF object
+          nodeArgs = {}
           nodeBody = {}
          
           # next token must be arg [nodeName]
@@ -402,7 +447,7 @@ def parseTokens(tokenStack:object) -> object:
           nodeRef = "VAR"
           #nodeName
           nodeLine = tokenLineNumber
-          nodeArgs = nodeArgs # use existing nodeArgs REF object
+          nodeArgs = {}
           nodeBody = {}
          
           # next token must be arg [nodeName]
@@ -525,10 +570,10 @@ def parseTokens(tokenStack:object) -> object:
       if peakLastTokenType() != "EXPRSTRT":   # generic arg (such as literals, strings, etc)
         nodeType = "ARG"
         nodeRef = "ARG"
-        nodeName = tokenValue
+        nodeName = "LITERAL"
         nodeLine = tokenLineNumber
-        nodeArgs = {} # this will always be empty for generic args as they never have params/arguments of their own
-        nodeBody = {} # this will always be empty for generic args as they never have bodies
+        nodeArgs.update({"value":tokenValue})
+        nodeBody = {} # this will always be empty for generic args as they never have bodies/children
         
         return(formattedNode())
 
