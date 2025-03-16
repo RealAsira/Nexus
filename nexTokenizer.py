@@ -132,6 +132,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
 
       if nextChar not in allReservedTokens: processingXML = True
       if nextChar == '/': processingXML = True  # / is reservered, but </ is xml-close tag start
+      
 
       if not processingXML: # comparison operator
         processingXML = False
@@ -162,7 +163,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
           return aToken
 
         else:
-          raise Exception('XML token-type lookup error:', aToken)
+          raise Exception(f"XML token-type lookup error on char {aToken}")
 
           
     # reserved single char token (including space delim)

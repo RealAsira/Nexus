@@ -1,2 +1,6 @@
-@const msg:str = "goodnight sky";
-@iv(@msg)
+@msg:str = "Goodnight sky!"; @msg.strip();
+@var num1:int = 1;
+@var num2:int = 2;
+
+@iv(@msg);
+@calc(@num1 / @num2);
