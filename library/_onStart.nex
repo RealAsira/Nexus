@@ -1,3 +1,2 @@
-@const msg:str = "goodnight sky"
-@msg();
-@iv(@msg();, @msg(););
+@const msg:str = "goodnight sky";
+@iv(@msg)
