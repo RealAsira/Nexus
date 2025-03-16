@@ -36,7 +36,7 @@ AST = abstractSyntaxTree()
 
 # PARSE TOKENS from tokenizeScript returned object... NEXPARSER ENTRY POINT
 # Returns an Abstract Syntax Tree (AST) as object
-def parseTokens(tokenStack:object) -> object:
+def parseTokens(tokenStack:object)->object:
   """Initialize the parsing of tokens"""
   #global allReservedTokens
   #global exprTypeTokens
@@ -74,21 +74,29 @@ def parseTokens(tokenStack:object) -> object:
       tokenType = currentToken[1]
       tokenValue = currentToken[2]
       tokenStack.pop()
+    else:
+      raise Exception('Expected more tokens but the token stack is empty.')
+
 
 
   def peakNextTokenType()->str:
     """Peak at the next token type without advancing the stack"""
-    return(tokenStack.stack[0][1])
+    if len(tokenStack.stack) > 0: return(tokenStack.stack[0][1])
+    else: return(None)
   
+
 
   def peakNextTokenValue()->str:
     """Peak at the next token value without advancing the stack"""
-    return(tokenStack.stack[0][2])
+    if len(tokenStack.stack) > 0: return(tokenStack.stack[0][2])
+    else: return(None)
   
+
 
   def peakLastTokenType()->str:
     """Peak at the previous token type without altering the stack"""
     return(lastToken[1])
+
 
 
   def getNode() -> dict:
@@ -97,6 +105,7 @@ def parseTokens(tokenStack:object) -> object:
     nonlocal nodeID
 
     nodeID += 1             # inc to next nodeID
+    thisNodeID = None       # thisNodeID is used when storing nested nodes to a parent node... thisNodeID is the parent's nodeID
     nodeType:str = None     # ie ref, type, op, etc
     nodeRef:str = None      # ie var, def, calc, etc
     nodeName:str = None     # ie var BAR, def FOO class AST (bar, foo, ast)
@@ -105,19 +114,23 @@ def parseTokens(tokenStack:object) -> object:
     nodeBody:dict = {}      # child nodes (eg function definition... iterative and can be many layers deep)
 
 
+
     def formattedNode(thisNodeID:int=nodeID):
       """Formats the node into a dictionary"""
       nonlocal nodeID, nodeType, nodeRef, nodeName, nodeLine, nodeArgs, nodeBody
       return({f"{thisNodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
 
     
+
     def getTypes()->list:
       """Gets all the immediately following type declarations for vars, consts, functions, etc"""
       typeList:list = []
 
-      getNextToken()  # begin with getting a new token (needs to be of type EXPRTYPE (:) )
-      if not tokenType == "EXPRTYPE":
+      # check that next token is of type EXPRTYPE (:)
+      if not peakNextTokenType() == "EXPRTYPE":
         raise Exception(f"Syntax Error: Expecting TYPE-INDICATOR (:) but found {tokenValue}({tokenType}).")
+      else:
+        getNextToken()  # eat EXPRTYPE (:)
       
       # TYPE-INDICATOR was found, meaning the loop for finding types can be initiated
       while True:    
@@ -136,30 +149,44 @@ def parseTokens(tokenStack:object) -> object:
       return(typeList)
     
 
+
     def getParams()->dict:
       """Gets all params/args for an expression declaration or call"""
       paramDict:dict = {}
       
-      getNextToken()
-      if not tokenType == "PARENOPN":
-        raise Exception(f"Syntax Error: Expecting start of PARAMS ( but found {tokenValue}({tokenType}).")
-      
-      # PARENOPN was found, meaning the loop finding args/params can be initiated
-      while True:
-        if peakNextTokenType() == "PARENCLS":
-          getNextToken()  # eat parencls so it isn't added to stack
-          break
-        else:
-          paramDict.update(getNode()) # add node as a param
+      processTokens = True if peakNextTokenType() == "PARENOPN" else False  # should tokens be processed?
+      if processTokens:
+        getNextToken()  # eat parenopn so it isn't added to
+        while True:
+          if peakNextTokenType() == "PARENCLS":
+            getNextToken()  # eat parencls so it isn't added to AST
+            break
+          else:
+            paramDict.update(getNode()) # add this node as a param
 
       return(paramDict)
-    
+       
+
 
     # get the next token to process into the node
-    getNextToken()
+    if peakNextTokenType() != None:
+      getNextToken()
+    else: tokenType = None
+
+    # since there are no more tokens, this node needs to be returned empty
+    if tokenType == None:
+      thisNodeID = 0
+      nodeType = None
+      nodeRef = None
+      nodeName = None
+      nodeLine = None
+      nodeArgs = None
+      nodeBody = None
+      return(formattedNode())
+
 
     # start of script
-    if tokenType == 'SCPTSTRT':
+    elif tokenType == 'SCPTSTRT':
       thisNodeID = nodeID     # preserveNodeID
       nodeType = tokenType    # start of script
       nodeRef = None          # override to no ref
@@ -171,8 +198,6 @@ def parseTokens(tokenStack:object) -> object:
       while len(tokenStack.stack) > 0:
         nodeBody.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
 
-      return(formattedNode(thisNodeID))
-
 
     # end of script
     elif tokenType == "SCPTEND":
@@ -183,7 +208,6 @@ def parseTokens(tokenStack:object) -> object:
       nodeArgs = {}           # override to no args
       nodeBody = {}           # override to no body
 
-      return(formattedNode())
 
 
     # start of an expression
@@ -199,8 +223,6 @@ def parseTokens(tokenStack:object) -> object:
       while True:
         if tokenType == "EXPREND": break
         nodeBody.update(getNode())
-
-      return(formattedNode(thisNodeID))
     
 
     # end of expression
@@ -212,7 +234,6 @@ def parseTokens(tokenStack:object) -> object:
       nodeArgs = {}
       nodeBody = {}
 
-      return(formattedNode())
 
 
     # start of a string
@@ -228,8 +249,6 @@ def parseTokens(tokenStack:object) -> object:
       while True:
         if tokenType == "STREND": break
         nodeBody.update(getNode())
-
-      return(formattedNode(thisNodeID))
     
 
     # end of string
@@ -240,8 +259,6 @@ def parseTokens(tokenStack:object) -> object:
       nodeLine = tokenLineNumber
       nodeArgs = {}
       nodeBody = {}
-
-      return(formattedNode())
 
 
     # for built in expressions such as var, def, class, etc
@@ -266,13 +283,9 @@ def parseTokens(tokenStack:object) -> object:
           nodeName = "ISVALID"
           nodeLine = tokenLineNumber
           nodeArgs = {}
-          nodeBody = {}
-
-          # IV always requires params
           nodeArgs.update({"params":getParams()})
+          nodeBody = {}
           
-          return(formattedNode(thisNodeID))        
-
 
         case "NV":
           """
@@ -285,13 +298,9 @@ def parseTokens(tokenStack:object) -> object:
           nodeName = "ISVALID"
           nodeLine = tokenLineNumber
           nodeArgs = {}
-          nodeBody = {}
-
-          # IV always requires params
           nodeArgs.update({"params":getParams()})
+          nodeBody = {}
           
-          return(formattedNode(thisNodeID))     
-
 
         #case "ABORT":
 
@@ -320,7 +329,7 @@ def parseTokens(tokenStack:object) -> object:
         #case "RSPNS_HEADER":
 
 
-        #case "RASPNS_REDIR":
+        #case "RSPNS_REDIR":
 
 
         #case "CALC":
@@ -412,8 +421,8 @@ def parseTokens(tokenStack:object) -> object:
           nodeBody = {}
          
           # next token must be arg [nodeName]
-          getNextToken()
-          if tokenType == "ARG":
+          if peakNextTokenType() == "ARG":
+            getNextToken()
             nodeName = tokenValue
           else:
             raise Exception(f"@CONST expecting argument NAME but found {tokenValue}({tokenType}).")
@@ -434,9 +443,7 @@ def parseTokens(tokenStack:object) -> object:
           if peakNextTokenValue() != "=": # using nextTokenValue since there are many types of OP tokenTypes but only one is allowed
             raise Exception(f"@CONST expecting ASSIGNMENT (=) but found {peakNextTokenValue()}({peakNextTokenType()}).")
 
-          return(formattedNode())
                
-
         case "VAR":
           """
           example: @var bar:int = 5;
@@ -451,8 +458,8 @@ def parseTokens(tokenStack:object) -> object:
           nodeBody = {}
          
           # next token must be arg [nodeName]
-          getNextToken()
-          if tokenType == "ARG":
+          if peakNextTokenType() == "ARG":
+            getNextToken()
             nodeName = tokenValue
           else:
             raise Exception(f"@VAR expecting argument NAME but found {tokenValue}({tokenType}).")
@@ -464,8 +471,6 @@ def parseTokens(tokenStack:object) -> object:
           if peakNextTokenType() not in ["OP", "EXPREND"]:
             raise Exception(f"@VAR expecting ASSIGNMENT (=) or END (;) but found {peakNextTokenValue()}({peakNextTokenType()}).")
 
-          return(formattedNode())
-        
 
         # Other REF-typed tokens
         case _:
@@ -477,9 +482,11 @@ def parseTokens(tokenStack:object) -> object:
           nodeArgs = {}
           nodeBody = {}
 
-          return(formattedNode())
-        
+      # at this point an end of expression is always expected ... if expression end is missing, add it
+      if peakNextTokenType() != "EXPREND":
+        tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
 
+        
     # for built in operators such as +, =, etc
     elif tokenType == "OP":
       """
@@ -540,8 +547,6 @@ def parseTokens(tokenStack:object) -> object:
           nodeArgs = {}
           nodeBody = {}
 
-          return(formattedNode())
-
 
         case _:
           print(f"Parser Warning C - {tokenValue} ({tokenType}) not implemented in parser yet. Attempted to create node anyway.")
@@ -552,31 +557,58 @@ def parseTokens(tokenStack:object) -> object:
           nodeArgs = {}
           nodeBody = {}
 
-          return(formattedNode())
-
 
     # for generic arg-typed tokens
     elif tokenType == "ARG":
-      if peakLastTokenType() == "EXPRSTRT":   # this is a user defined function, object, or variable call
+      # this is a user defined function, object, or variable call
+      if peakLastTokenType() == "EXPRSTRT":
+        thisNodeID = nodeID
         nodeType = "REF"
         nodeRef = "ARG"
         nodeName = tokenValue
         nodeLine = tokenLineNumber
-        nodeArgs.update(getParams())
+        nodeArgs.update({"params":getParams()})
         nodeBody = {} # empty or attached methods
-        
-        return(formattedNode())
 
-      if peakLastTokenType() != "EXPRSTRT":   # generic arg (such as literals, strings, etc)
+        # get attached methods
+        while True:
+          if peakNextTokenType() != "METHSTRT": break
+          else: nodeBody.update(getNode())
+
+        # end of methods implies end of expression ... if expression end is missing, add it
+        if peakNextTokenType() != "EXPREND":
+          tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
+        
+      # generic arg (such as literals, strings, etc)
+      elif peakLastTokenType() != "EXPRSTRT":  
         nodeType = "ARG"
         nodeRef = "ARG"
         nodeName = "LITERAL"
         nodeLine = tokenLineNumber
         nodeArgs.update({"value":tokenValue})
         nodeBody = {} # this will always be empty for generic args as they never have bodies/children
-        
-        return(formattedNode())
 
+
+    elif tokenType == "METHSTRT":
+      # format: @expr.meth().meth().meth()...
+      thisNodeID = nodeID
+      nodeType = tokenType
+      nodeRef = tokenValue
+      #nodeName
+      nodeLine = tokenLineNumber
+      nodeArgs = {}
+      nodeBody = {}
+
+      # next token must be arg [nodeName]
+      if peakNextTokenType() == "ARG":
+        getNextToken()
+        nodeName = tokenValue
+      else:
+        raise Exception(f"METHOD expecting NAME but found {tokenValue}({tokenType}).")
+      
+      # next token must be args (even if none/null/blank are supplied)
+      nodeArgs.update({"params":getParams()})
+      
 
     # catch-all for missing items
     else:
@@ -588,7 +620,11 @@ def parseTokens(tokenStack:object) -> object:
       nodeArgs = {}
       nodeBody = {}
 
-      return(formattedNode())
+
+
+    # RUNS AFTER THE IF/ELSE STATEMENT FOR PARSING NODES BASED ON TOKEN TYPES
+    thisNodeID = nodeID if thisNodeID is None else thisNodeID   # is nodeID unless a value is assigned
+    return(formattedNode(thisNodeID))
       
 
 

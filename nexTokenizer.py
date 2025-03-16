@@ -19,10 +19,11 @@ class tokenStack:
     # [[lineNumber, tokenType, tokenValue], .., ..]
     self.stack = []
 
-  def insert(self, lineNumber:int, tokenType:str, tokenValue):
-    """Add a token to the top of the stack"""
+  def insert(self, lineNumber:int, tokenType:str, tokenValue, pos:int=None):
+    """Add a token at position in stack OR at top of stack if no position specified"""
     #print(f"Stored token from line", lineNumber, 'as', tokenType, tokenValue)
-    self.stack.insert(len(self.stack), [int(lineNumber), tokenType.strip().upper(), tokenValue.strip()])
+    position = pos if pos != None else len(self.stack)
+    self.stack.insert(position, [int(lineNumber), tokenType.strip().upper(), tokenValue.strip()])
   
   def pop(self, pos:int=0):
     """Remove a token from the bottom of the stack"""
@@ -37,13 +38,13 @@ class tokenStack:
     # the tokenStack is reused and needs to be cleared between uses
     self.stack.clear()
   
-tokenStack = tokenStack()
+defaultStack = tokenStack()
   
 
 
 
 
-def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> object:
+def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenStack:object=defaultStack) -> object:
   """Process a script into a token stack"""
   global allReservedTokens, stringDelimTokens, xmlDelimTokens
   #global exprTypeTokens
@@ -274,7 +275,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module") -> objec
 
       # the currentToken is a reserved token and needs to be stored ... don't store new-lines
       elif currentToken.upper() in allReservedTokens:
-        # new line tokens previously counted line number, but shouldn't be stored here
+        # new line tokens previously counted line number, but shouldn't be stored
         if allReservedTokens[currentToken.upper()].upper() == "NL":
           pos += len(currentToken)
           currentToken = None
