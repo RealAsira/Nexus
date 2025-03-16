@@ -278,8 +278,8 @@ def parseTokens(tokenStack:object)->object:
           returns true if expression evaluates to true
           """
           thisNodeID = nodeID
-          nodeType = "REF"
-          nodeRef = "IV"
+          nodeType = tokenType
+          nodeRef = tokenValue
           nodeName = "ISVALID"
           nodeLine = tokenLineNumber
           nodeArgs = {}
@@ -290,12 +290,12 @@ def parseTokens(tokenStack:object)->object:
         case "NV":
           """
           example: @nv(1); @nv(@someVar);
-          returns true true if expression evaluates to false
+          returns true if expression evaluates to false
           """
           thisNodeID = nodeID
-          nodeType = "REF"
-          nodeRef = "IV"
-          nodeName = "ISVALID"
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "NOTVALID"
           nodeLine = tokenLineNumber
           nodeArgs = {}
           nodeArgs.update({"params":getParams()})
@@ -332,7 +332,23 @@ def parseTokens(tokenStack:object)->object:
         #case "RSPNS_REDIR":
 
 
-        #case "CALC":
+        case "CALC":
+          """
+          example: @calc(@val1 + @val2); @calc(@val3**4)
+          evaluates to a numeric literal (float or int) value from a mathematical equation
+          """
+          thisNodeID = nodeID
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = tokenValue
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeArgs.update({"params":getParams()})
+          nodeBody = {}
+
+          while True:
+            if peakNextTokenType() != "METHSTRT": break
+            else: nodeArgs.update({"methods":getNode()})
 
 
         #case "MIN":
@@ -371,10 +387,34 @@ def parseTokens(tokenStack:object)->object:
         #case "NONLOCAL":
 
 
-        #case "PRINT":
+        case "PRINT":
+          """
+          example: @print(@someValue);
+          prints some value to the operating console
+          """
+          thisNodeID = nodeID
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = tokenValue
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeArgs.update({"params":getParams()})
+          nodeBody = {}
 
 
-        #case "RETURN":
+        case "RETURN":
+          """
+          example: @return(@someValue);
+          return value of a function
+          """
+          thisNodeID = nodeID
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = tokenValue
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeArgs.update({"params":getParams()})
+          nodeBody = {}
 
 
         #case "CLASS":
@@ -413,8 +453,8 @@ def parseTokens(tokenStack:object)->object:
           @const [name]:[type] = [value];
           """
           thisNodeID = nodeID     # preserveNodeID
-          nodeType = "REF"
-          nodeRef = "CONST"
+          nodeType = tokenType
+          nodeRef = tokenValue
           #nodeName
           nodeLine = tokenLineNumber
           nodeArgs = {}
@@ -450,8 +490,8 @@ def parseTokens(tokenStack:object)->object:
           @var [name]:[type] [(optional) = [value]];
           """
           thisNodeID = nodeID     # preserveNodeID
-          nodeType = "REF"
-          nodeRef = "VAR"
+          nodeType = tokenType
+          nodeRef = tokenValue
           #nodeName
           nodeLine = tokenLineNumber
           nodeArgs = {}
@@ -494,48 +534,115 @@ def parseTokens(tokenStack:object)->object:
       +, -, *, /, **, //, %, +=, -=, *=, /=, =
       """
       match tokenValue:
-        #case "+":
-        #  """Adds right value to left value"""
+        case "+":
+          """Adds right value to left value"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "ADD"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "-":
-        #  """Subtracts right value from left value"""
+        case "-":
+          """Subtracts right value from left value"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "SUBTRACT"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "*":
-        #  """Multiplies left value by right value"""
+        case "*":
+          """Multiplies left value by right value"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "MULTIPLY"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "/":
-        #  """Divides left value by right value"""
+        case "/":
+          """Divides left value by right value"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "DIVIDE"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "**":
-        #  """Raises left value to power of right value"""
+        case "**":
+          """Raises left value to power of right value"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "NPOW"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "//":
-        #  """nth root of left value (where n is right value)"""
+        case "//":
+          """nth root of left value (where n is right value)"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "NROOT"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "%":
-        #  """Modulates left value by right value"""
+        case "%":
+          """Modulates left value by right value"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "MODULO"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "+=":
-        #  """Adds right value to left expression value and assigns result to left expression"""
+        case "+=":
+          """Adds right value to left expression value and assigns result to left expression"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "ADDANDEQ"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "-=":
-        #  """Subtracts right value from left expression value and assigns result to left expression"""
+        case "-=":
+          """Subtracts right value from left expression value and assigns result to left expression"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "DIVANDEQ"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
+         
 
 
-        #case "*=":
-        #  """Multiplies left expression value by right value and assigns result to left expression"""
+        case "*=":
+          """Multiplies left expression value by right value and assigns result to left expression"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "MULANDEQ"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
-        #case "/=":
-        #  """Divides left expression value by right value and assigns result to left expression"""
+        case "/=":
+          """Divides left expression value by right value and assigns result to left expression"""
+          nodeType = tokenType
+          nodeRef = tokenValue
+          nodeName = "DIVANDEQ"
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
 
         case "=":
@@ -573,7 +680,7 @@ def parseTokens(tokenStack:object)->object:
         # get attached methods
         while True:
           if peakNextTokenType() != "METHSTRT": break
-          else: nodeBody.update(getNode())
+          else: nodeArgs.update({"methods":getNode()})
 
         # end of methods implies end of expression ... if expression end is missing, add it
         if peakNextTokenType() != "EXPREND":
