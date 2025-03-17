@@ -130,25 +130,25 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
       # +1 to get next pos, -1 to get set script last char bound
       nextChar:str = str(script[min(pos+1, scriptLen-1)]).upper()
 
-      if nextChar not in allReservedTokens: processingXML = True
-      if nextChar == '/': processingXML = True  # / is reservered, but </ is xml-close tag start
-      
+      if nextChar not in allReservedTokens: processingXML = True            # not a comparison
+      if str(aToken) + str(nextChar) in ['/>', '</']: processingXML = True  # is certainly xml
+      if aToken == '/' and nextChar in ['/', '=']: processingXML = False    # /= and // are reserved
+      if aToken == '/' and nextChar != '>': processingXML = False           # indicates this is a / OP
 
-      if not processingXML: # comparison operator
-        processingXML = False
-        #print(f"g. Found token {aToken}")
+      if processingXML == False: # comparison operator
+        print(f"g. Found token {aToken}")
         return aToken
 
-      elif processingXML:
+      elif processingXML == True:
         # /> (xml open-tag self-end)
         if (str(aToken) + str(nextChar) == '/>'):
-          aToken = aToken + nextChar  # get /> instead of /
+          aToken = str(aToken) + str(nextChar)  # get /> instead of /
           #print(f"h. Found token {aToken}")
           return aToken
         
         # </ (xml close-tag start)
         elif (str(aToken) + str(nextChar) == '</'):
-          aToken = aToken + nextChar  # get </ instead of <
+          aToken = str(aToken) + str(nextChar)  # get </ instead of <
           #print(f"h. Found token {aToken}")
           return aToken
         
@@ -281,12 +281,26 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
           pos += len(currentToken)
           currentToken = None
           continue
+
+        # handle operators differently
+        elif allReservedTokens[currentToken.upper()].upper() == "OP":
+          # built in operators: +, -, *, /, **, //, %, +=, -=, *=, /=, =
+          if str(currentToken) + str(script[min(pos+1, scriptLen-1)]) in ['+=', '-=', '*=', '/=', '//']:  # this is a multi-char operator
+            currentToken = currentToken + script[min(pos+1, scriptLen-1)] # store mutli-char operator as currentToken
+              
+          # store the operator token
+          #print(f"Stored token as reserved token {allReservedTokens[currentToken.upper()]} {currentToken}")
+          tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken.upper()].upper(), currentToken.upper())
+          pos += len(currentToken)
+          currentToken = None
+          continue
           
-        #print(f"Stored token as reserved token {allReservedTokens[currentToken.upper()]} {currentToken}")
-        tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken.upper()].upper(), currentToken.upper())
-        pos += len(currentToken)
-        currentToken = None
-        continue
+        else: # default reserved token procedure
+          #print(f"Stored token as reserved token {allReservedTokens[currentToken.upper()]} {currentToken}")
+          tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken.upper()].upper(), currentToken.upper())
+          pos += len(currentToken)
+          currentToken = None
+          continue
 
 
       # generic arg token

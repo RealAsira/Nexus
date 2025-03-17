@@ -3,4 +3,7 @@
 @var num2:int = 2;
 
 @iv(@msg);
-@calc(@num1 / @num2);
+
+<p>Hello/world!</p>
+
+@calc(@num1 // @num2);
