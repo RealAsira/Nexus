@@ -1,6 +1,9 @@
-@msg:str = "Goodnight sky!"; @msg.strip();
+@var msg:str = "Goodnight sky!"; @msg.strip();
 @var num1:int = 1;
 @var num2:int = 2;
 
 @iv(@msg);
-@calc(@num1 / @num2);
+
+<p>Hello/world!</p>
+
+@calc(@num1 // @num2);

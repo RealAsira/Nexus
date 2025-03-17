@@ -10,7 +10,7 @@ from nexParser import parseTokens
 # GLOBAL VARIABLES
 request_headers:dict = {}    # client's request headers
 response_headers:dict = {}   # server's response headers
-response_content = None # content returned by server
+response_content = None      # content returned by server
 config:dict = {}             # nexus server configuration options
 sockets:list = []            # hosts/ports to bind to
 
@@ -94,7 +94,7 @@ def setupSockets()->None:
 
 
 
-def parseRequest(request:str):
+def parseRequest(request:str)->None:
   """Parse client request into usable parts"""
   global request_headers
   request_headers = {}
