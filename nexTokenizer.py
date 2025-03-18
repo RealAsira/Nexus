@@ -136,7 +136,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
       if aToken == '/' and nextChar != '>': processingXML = False           # indicates this is a / OP
 
       if processingXML == False: # comparison operator
-        print(f"g. Found token {aToken}")
+        #print(f"g. Found token {aToken}")
         return aToken
 
       elif processingXML == True:
