@@ -3,7 +3,6 @@
 @var num2:int = 2;
 
 @iv(@msg);
-
-<p>Hello/world!</p>
-
-@calc(@num1 // @num2);
+@def nroot (num1:int, num2:int):int {
+  @calc(@num1 // @num2);
+}
