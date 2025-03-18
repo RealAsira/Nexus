@@ -378,8 +378,40 @@ def parseTokens(tokenStack:object)->object:
         #case "RANDOM":
 
 
-        #case "DEF":
+        case "DEF":
+          """
+          example: @def foo(num1:int, num2:int):int {
+            ...
+          }
+          """
+          thisNodeID = nodeID
+          nodeType = tokenType
+          nodeRef = tokenValue
+          #nodeName
+          nodeLine = tokenLineNumber
+          nodeArgs = {}
+          nodeBody = {}
 
+          # next token type must be arg [nodeName]
+          if peakNextTokenType() == "ARG":
+            getNextToken()
+            nodeName = tokenValue
+          else:
+            raise Exception(f"@DEF expecting argument NAME but found {tokenValue}({tokenType}).")
+          
+          # get parameters for function definition then return type(s)
+          nodeArgs.update({"params":getParams()})
+          nodeArgs.update({"returnTypes":getTypes()})
+
+          # get definition (required)
+          if peakNextTokenType() == "BRACEOPN":
+            getNextToken()  # eat braceopn { so it isn't added to AST
+            while True:
+              if peakNextTokenType() == "BRACECLS":
+                getNextToken() # eat bracecls } so it isn't added to AST
+                break
+              else: nodeBody.update(getNode())
+          
 
         #case "GETGLOBAL":
 
@@ -685,6 +717,23 @@ def parseTokens(tokenStack:object)->object:
         # end of methods implies end of expression ... if expression end is missing, add it
         if peakNextTokenType() != "EXPREND":
           tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
+
+      # this is a definition parameter
+      elif peakNextTokenType() == "EXPRTYPE":
+        nodeType = tokenType
+        nodeRef = tokenValue
+        nodeName = "PARAM"
+        nodeLine = tokenLineNumber
+        nodeArgs = {}
+        nodeBody = {}
+        
+        # get allowed types for this param
+        nodeArgs.update({"returnTypes":getTypes()})
+
+        # assign default value, delimit, or see end of params.
+        if peakNextTokenType() not in ["OP", "EXPRDLM", 'PARENCLS']:
+          raise Exception(f"PARAMETER expecting ASSIGNMENT (=) or DELIM (,) but found {peakNextTokenValue()}({peakNextTokenType()}).")
+
         
       # generic arg (such as literals, strings, etc)
       elif peakLastTokenType() != "EXPRSTRT":  
