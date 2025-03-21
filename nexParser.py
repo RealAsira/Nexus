@@ -188,7 +188,7 @@ def parseTokens(tokenStack:object)->object:
     # start of script
     elif tokenType == 'SCPTSTRT':
       thisNodeID = nodeID     # preserveNodeID
-      nodeType = tokenType    # start of script
+      nodeType = 'ROOT'       # root / start of script
       nodeRef = None          # override to no ref
       nodeName = None         # override to no name
       nodeLine = 0            # override to line 0
@@ -196,11 +196,15 @@ def parseTokens(tokenStack:object)->object:
     
       # start getting child nodes and appending them to body using [dict].update(...)
       while len(tokenStack.stack) > 0:
-        nodeBody.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
+        if peakNextTokenType() == "SCPTEND":
+          getNextToken() # eat scptend so it isn't added
+          break
+        else: nodeBody.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
 
 
-    # end of script
+    # end of script shouldn't be stored
     elif tokenType == "SCPTEND":
+      print('PARSER ERROR - SCPTEND WASN\'T EATEN AS EXPECTED')
       nodeType = tokenType    # end of script
       nodeRef = None          # override to no ref
       nodeName = None         # override to no name
@@ -213,7 +217,7 @@ def parseTokens(tokenStack:object)->object:
     # start of an expression
     elif tokenType == "EXPRSTRT":
       thisNodeID = nodeID
-      nodeType = tokenType
+      nodeType = 'EXPR'       # an expression
       nodeRef = None
       nodeName = None
       nodeLine = tokenLineNumber
@@ -221,11 +225,13 @@ def parseTokens(tokenStack:object)->object:
 
       # all following nodes are children until this expression ends
       while True:
-        if tokenType == "EXPREND": break
-        nodeBody.update(getNode())
+        if peakNextTokenType() == "EXPREND":
+          getNextToken()  # eat exprend so it isn't stored as child node
+          break
+        else: nodeBody.update(getNode())
     
 
-    # end of expression
+    # EXPREND isn't stored expressions with nested elements, but it IS stored to separate same-nodal-level elements
     elif tokenType == "EXPREND":
       nodeType = tokenType
       nodeRef = tokenValue
@@ -235,9 +241,8 @@ def parseTokens(tokenStack:object)->object:
       nodeBody = {}
 
 
-
     # start of a string
-    elif tokenType == "STRSTRT":
+    elif tokenType == "STRLITERAL":
       thisNodeID = nodeID
       nodeType = tokenType
       nodeRef = None
@@ -247,12 +252,15 @@ def parseTokens(tokenStack:object)->object:
 
       # all following nodes are children until this string ends
       while True:
-        if tokenType == "STREND": break
-        nodeBody.update(getNode())
+        if peakNextTokenType() == "STREND":
+          getNextToken() # eat strend so it isn't stored
+          break
+        else: nodeBody.update(getNode())
     
 
-    # end of string
+    # end of string shouldn't be returned
     elif tokenType == "STREND":
+      print('PARSER ERROR - STREND WASN\'T EATEN AS EXPECTED!!')
       nodeType = tokenType
       nodeRef = None
       nodeName = None
@@ -785,10 +793,7 @@ def parseTokens(tokenStack:object)->object:
 
 
   # initialize the building of the node tree
-  if currentNode is None:
-    currentNode = getNode()
-
-
+  #if currentNode is None: currentNode = getNode()
 
   # continue looping until end of token stack 
   while len(tokenStack.stack) > 0:
@@ -796,5 +801,5 @@ def parseTokens(tokenStack:object)->object:
     AST.update(currentNode)   # put into tree
     currentNode = None        # reset for next node
 
-  print(json.dumps(AST.tree, indent=2))
+  #print(json.dumps(AST.tree, indent=2))
   return (AST)

@@ -232,8 +232,8 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
   
           elif not isEscaped:
             #print(f"Stored token as strStrt {currentToken}")
-            tokenStack.insert(tokenLineNumber, "STRSTRT", currentToken.upper())
-          
+            tokenStack.insert(tokenLineNumber, "STRLITERAL", currentToken.upper())
+
         elif not processingStr:
           #print(f"Stored token as strEnd {currentToken}")
           tokenStack.insert(tokenLineNumber, "STREND", currentToken.upper())
