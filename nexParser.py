@@ -118,7 +118,7 @@ def parseTokens(tokenStack:object)->object:
     def formattedNode(thisNodeID:int=nodeID):
       """Formats the node into a dictionary"""
       nonlocal nodeID, nodeType, nodeRef, nodeName, nodeLine, nodeArgs, nodeBody
-      return({f"{thisNodeID}": {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
+      return({thisNodeID: {"nodeType": nodeType, "nodeRef": nodeRef, "nodeName": nodeName, "nodeLineNumber": nodeLine, "nodeArgs": nodeArgs, "nodeBody": nodeBody}})
 
     
 
@@ -355,7 +355,7 @@ def parseTokens(tokenStack:object)->object:
           nodeBody = {}
 
           while True:
-            if peakNextTokenType() != "METHSTRT": break
+            if peakNextTokenType() != "METHOD": break
             else: nodeArgs.update({"methods":getNode()})
 
 
@@ -719,7 +719,7 @@ def parseTokens(tokenStack:object)->object:
 
         # get attached methods
         while True:
-          if peakNextTokenType() != "METHSTRT": break
+          if peakNextTokenType() != "METHOD": break
           else: nodeArgs.update({"methods":getNode()})
 
         # end of methods implies end of expression ... if expression end is missing, add it
@@ -753,7 +753,7 @@ def parseTokens(tokenStack:object)->object:
         nodeBody = {} # this will always be empty for generic args as they never have bodies/children
 
 
-    elif tokenType == "METHSTRT":
+    elif tokenType == "METHOD":
       # format: @expr.meth().meth().meth()...
       thisNodeID = nodeID
       nodeType = tokenType

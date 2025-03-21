@@ -14,7 +14,7 @@ allReservedTokens:dict = {
   ':': 'exprType',    #assign type to var, func, method
   ';': 'exprEnd',     #ends expr immediately
   ',': 'exprDlm',     #delims args in expr
-  '.': 'methStrt',    #start of a method (ie @bar.destroy() where destroy is method)
+  '.': 'method',    #start of a method (ie @bar.destroy() where destroy is method)
 
   # Structure
   '(': 'parenOpn',    #used for args
