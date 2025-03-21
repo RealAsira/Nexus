@@ -1,0 +1,9 @@
+@var msg:str = "Goodnight sky!"; @msg.strip();
+@iv(@msg);
+
+@var num1:int = 1;
+@var num2:int = 2;
+
+@def nroot (num1:int, num2:int):int {
+  @calc(@num1 // @num2);
+}
