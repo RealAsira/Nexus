@@ -5,6 +5,7 @@ import os
 import socket
 from nexTokenizer import tokenizeScript
 from nexParser import parseTokens
+from nexInterpreter import interpretAST
 
 
 # GLOBAL VARIABLES
@@ -131,17 +132,24 @@ def constructResponse() -> bytes:
   try:
     scriptPath:str = config['library'] + '/_onStart.nex'
     with open(scriptPath, "r", encoding="utf-8") as file:
-      response_content = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
+      _onStartContent = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
   except:
     print(f"Fatal Error: _onStart.nex file doesn't exist in the configured library directory.")
 
   # attempt tokenization
   try:
-    tokenStack:object = tokenizeScript(response_content)
+    tokenStack:object = tokenizeScript(_onStartContent)
 
     # attempt parse
     try:
       AST:object = parseTokens(tokenStack)
+
+      # attempt interpret
+      try:
+        response_content = interpretAST(AST)
+      
+      except Exception as err:
+        print(f"Fatal Error: Could not interpret the AST ... Error: {str(err)}")
     except Exception as err:
       print(f"Fatal Error: Could not parse tokens into nodal-AST ... Error: {str(err)}")
   except Exception as err:
@@ -161,7 +169,7 @@ def constructResponse() -> bytes:
   headers += f"Date: {datetime.datetime.now().strftime('%a, %d %b %Y %H:%M:00 MST')}\r\n"
  #headers += f"set-cookie: cookieName=%7BcookieVal%7D; domain=www.example.com; expires=Wed, 11 Feb 2026 00:00:00 GMT;SameSite=Lax\r\n"
   
-  # client is expected \r\n\r\n ...
+  # client is expecting \r\n\r\n ...
   # because previous header has \r\n, one more is needed. This marks end of headers, start of body
   headers += f"\r\n"
 
