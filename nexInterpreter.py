@@ -16,20 +16,6 @@ content:str = None # CONTENT INTERPRETED!!
 
 
 
-def traverseAST(nodeID, tree, depth=0):
-  if nodeID not in tree:
-    return
-  
-  node = tree[nodeID]
-  
-  for childNodeID in sorted(node["nodeBody"].keys(), key=int):
-    traverseAST(childNodeID, node["nodeBody"], depth+1)
-
-  if node["nodeType"] != 'EXPR':
-    print(f"Node {nodeID}: type = {node["nodeType"]}, ref = {node["nodeRef"]}, name = {node["nodeName"]}, line = {node['nodeLineNumber']}")
-
-
-
 def interpretAST(AST:object)->str:
   """USES AST TO GENERATE AN OUTPUT"""
   #global allReservedTokens
