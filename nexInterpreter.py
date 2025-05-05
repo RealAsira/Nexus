@@ -13,7 +13,6 @@ xmlDelimTokens = nexServerGlobals.stringDelimTokens
 refTokens = nexServerGlobals.refTokens
 
 variables:list = [] # a list of references and values
-
 content:str = None # CONTENT INTERPRETED!!
 
 
@@ -29,8 +28,19 @@ def interpretAST(AST:object)->str:
   #global refTokens
 
 
-  def interpretNode(node:dict, nodeID:int, childReturns:list)->any:
-    """Interprets the node (functionality)"""
+  def interpretExpr(node:dict, nodeID:int, childReturns:list)->any:
+    global variables
+    
+    nodeType = node["nodeType"]
+    nodeRef = node["nodeRef"]
+    nodeName = node["nodeName"]
+    nodeArgs = node["nodeArgs"]
+
+    print('expr: ', nodeID, nodeType, nodeRef, nodeName, nodeArgs, childReturns)
+
+
+  def processNode(node:dict, nodeID:int, childReturns:list)->any:
+    """Processes the node"""
     global variables
 
     nodeType = node["nodeType"]
@@ -38,7 +48,6 @@ def interpretAST(AST:object)->str:
     nodeName = node["nodeName"]
     nodeArgs = node["nodeArgs"]
 
-    print(nodeID, nodeType, nodeRef, nodeName, nodeArgs, childReturns)
 
     if nodeType == "ROOT":
       """Functionality for root of AST"""
@@ -48,7 +57,7 @@ def interpretAST(AST:object)->str:
 
     elif nodeType == "EXPR":
       """Functionality for an expression call"""
-      ...
+      interpretExpr(node, nodeID, childReturns)
 
 
 
@@ -62,7 +71,7 @@ def interpretAST(AST:object)->str:
       for item in childReturns:
         returnVal = f"{returnVal}{item}"
 
-      print('STRLITERAL:', returnVal)
+      #print('STRLITERAL:', returnVal)
       return(returnVal)
 
 
@@ -80,13 +89,20 @@ def interpretAST(AST:object)->str:
 
       if nodeRef == "VAR":
         """handle variable declaration"""
-        ...
+        varName = nodeName
+        varType = nodeArgs['returnTypes']
+        #value appended separately
+
+        # create the placeholder variable, return the name in case it is needed
+        variables.append({'name': varName, 'type': varType, 'value': None})
+        return({'varName': varName, 'varType': varType})
+        
 
 
 
     elif nodeType == "OP":
       """Funtionality for an operator"""
-      ...
+      return('ASSIGN')
 
 
 
@@ -95,7 +111,7 @@ def interpretAST(AST:object)->str:
       Functionality for a arg literal
       returns raw data literal
       """
-      print('ARG:', nodeArgs['value'])
+      #print('ARG:', nodeArgs['value'])
       return(nodeArgs['value'])
 
 
@@ -113,21 +129,21 @@ def interpretAST(AST:object)->str:
 
     
 
-  def processNode(subAST:dict, nodeID:int):
-    """Processes a node's functionality"""
+  def traverseAST(subAST:dict, nodeID:int):
+    """Traverse AST to then interpret each node"""
     childReturns:list = []
 
     for childNodeID in sorted(subAST["nodeBody"].keys(), key=int):
-      childReturn = processNode(subAST["nodeBody"][childNodeID], childNodeID) # get children return value
-      childReturns.append(childReturn) # append to list for parent node to process
+      childReturn = traverseAST(subAST["nodeBody"][childNodeID], childNodeID) # get children return value
+      childReturns.append(childReturn)                                        # append to list for parent node to process
 
-    return (interpretNode(subAST, nodeID, childReturns))
+    return (processNode(subAST, nodeID, childReturns))
 
 
 
   # ENTRY POINT
   nodeID:int = next(iter(AST.tree.keys()))  # get first nodeID (entry point)
-  processNode(AST.tree[nodeID], nodeID) # iterative processor entry point ... use full AST and root nodeID
+  traverseAST(AST.tree[nodeID], nodeID)     # iterative processor entry point ... use full AST and root nodeID
   
   # EXIT POINT
   print(json.dumps(AST.tree, indent=2))
