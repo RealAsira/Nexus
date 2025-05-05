@@ -1,1 +1,1 @@
-@var msg:str = "Goodnight sky!"; @msg.strip();
+@var phrase:str = "goodnight sky!";

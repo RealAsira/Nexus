@@ -522,6 +522,10 @@ def parseTokens(tokenStack:object)->object:
           # must have a value assigned immediately
           if peakNextTokenValue() != "=": # using nextTokenValue since there are many types of OP tokenTypes but only one is allowed
             raise Exception(f"@CONST expecting ASSIGNMENT (=) but found {peakNextTokenValue()}({peakNextTokenType()}).")
+          
+          if peakNextTokenValue() == "=":
+            bypassEnd = True  # bypass the EXPREND auto-insert if it is missing (in this case, it should be missing since an OP is found)
+
 
                
         case "VAR":
@@ -550,6 +554,9 @@ def parseTokens(tokenStack:object)->object:
           
           if peakNextTokenType() not in ["OP", "EXPREND"]:
             raise Exception(f"@VAR expecting ASSIGNMENT (=) or END (;) but found {peakNextTokenValue()}({peakNextTokenType()}).")
+          
+          if peakNextTokenValue() == "=":
+            bypassEnd = True  # bypass the EXPREND auto-insert if it is missing (in this case, it should be missing since an OP is found)
 
 
         # Other REF-typed tokens
@@ -562,8 +569,11 @@ def parseTokens(tokenStack:object)->object:
           nodeArgs = {}
           nodeBody = {}
 
+      
       # at this point an end of expression is always expected ... if expression end is missing, add it
-      if peakNextTokenType() != "EXPREND":
+      # exception to this rule is vars and consts, which may be assigned a value before expr end
+      print('here', tokenType, tokenValue)
+      if peakNextTokenType() != "EXPREND" and not bypassEnd:
         tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
 
         
