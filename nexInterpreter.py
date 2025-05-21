@@ -12,7 +12,7 @@ stringDelimTokens = nexServerGlobals.stringDelimTokens
 xmlDelimTokens = nexServerGlobals.stringDelimTokens
 refTokens = nexServerGlobals.refTokens
 
-variables:list = [] # a list of references and values
+variables:dict = {} # a list of references and values
 content:str = None # CONTENT INTERPRETED!!
 
 
@@ -28,7 +28,8 @@ def interpretAST(AST:object)->str:
   #global refTokens
 
 
-  def interpretExpr(node:dict, nodeID:int, childReturns:list)->any:
+  def interp_var_assignment(node:dict, nodeID:int, childReturns:list)->any:
+    """Interprets the assignment of a value to a variable"""
     global variables
     
     nodeType = node["nodeType"]
@@ -36,7 +37,30 @@ def interpretAST(AST:object)->str:
     nodeName = node["nodeName"]
     nodeArgs = node["nodeArgs"]
 
-    print('expr: ', nodeID, nodeType, nodeRef, nodeName, nodeArgs, childReturns)
+    varName = childReturns[0]['varName']
+    varTypes = childReturns[0]['varTypes']
+    operation = childReturns[1]
+    value = childReturns[2]['argValue']
+    valueTypes = childReturns[2]['argTypes']
+
+    isValidType = False
+    for valueType in valueTypes:
+      if valueType in varTypes: isValidType = True
+
+    if operation == "ASSIGN":
+      if not isValidType:                     # illegal type assignment
+        raise Exception(f"Cannot assign type {valueTypes} value to variable of value type(s) {varTypes}.")
+      else:
+        variables[varName]['value'] = value   # assign new value
+
+    return(None)
+
+
+
+  def interp_xxx(node:dict, nodeID:int, childReturns:list)->any:
+    """Placeholder"""
+    ...
+
 
 
   def processNode(node:dict, nodeID:int, childReturns:list)->any:
@@ -57,7 +81,13 @@ def interpretAST(AST:object)->str:
 
     elif nodeType == "EXPR":
       """Functionality for an expression call"""
-      interpretExpr(node, nodeID, childReturns)
+      # all children of an expression have been ... determine how it is interpretted
+
+      # FUNCTION CURRENTLY ASSUMES VARIABLE VALUE ASSIGNMENTS ... 
+      # NEED TO INSTEAD USE RETURNED CHILDREN AS CONTEXT OF HOW TO PROCESS
+      print('TESTING VAR ASSIGNMENT', variables)
+      interp_var_assignment(node, nodeID, childReturns)
+      print('TESTING VAR ASSIGNMENT', variables)
 
 
 
@@ -66,12 +96,15 @@ def interpretAST(AST:object)->str:
       Functionality for a string literal
       returns a string from concatted child elements
       """
-      returnVal:str = ''
+      strLiteral:str = ''
+      returnVal:dict = {}
 
+      # concat childReturns (arg literals) into string
       for item in childReturns:
-        returnVal = f"{returnVal}{item}"
+        strLiteral = f"{strLiteral}{item['argValue']}"
 
-      #print('STRLITERAL:', returnVal)
+      # return as nodeArg dict for interp_assignment
+      returnVal = {'argTypes': ['STR'], 'argValue': strLiteral}
       return(returnVal)
 
 
@@ -79,25 +112,23 @@ def interpretAST(AST:object)->str:
     elif nodeType == "REF":
       """
       Functionality for an expression
-      List of built-in ref-typed expressions
+      List of built-in ref-typed expressions:
       iv, nv, abort, stop, cookie, httpget, httppost, output, sleep, wait, rspns_header, rspns_redir,
       calc, min, max, chr, ord, date, now, today, guid, random,
       def, getglobal, nonlocal, print, return, class, object, self, library, use
       tern, if, switch, when, else, const, var
       """
 
-
       if nodeRef == "VAR":
         """handle variable declaration"""
         varName = nodeName
-        varType = nodeArgs['returnTypes']
+        varTypes = nodeArgs['returnTypes']
         #value appended separately
 
         # create the placeholder variable, return the name in case it is needed
-        variables.append({'name': varName, 'type': varType, 'value': None})
-        return({'varName': varName, 'varType': varType})
+        variables.update({f'{varName}': {'type': varTypes, 'value': None}})
+        return({'varName': varName, 'varTypes': varTypes})
         
-
 
 
     elif nodeType == "OP":
@@ -108,11 +139,11 @@ def interpretAST(AST:object)->str:
 
     elif nodeType == "ARG":
       """
-      Functionality for a arg literal
-      returns raw data literal
+      Functionality for an arg literal
+      returns the literal's type and value
       """
-      #print('ARG:', nodeArgs['value'])
-      return(nodeArgs['value'])
+      arg = {'argValue': nodeArgs['value'], 'argTypes': nodeArgs['types']}
+      return(arg)
 
 
 

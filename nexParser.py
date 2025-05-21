@@ -34,6 +34,49 @@ AST = abstractSyntaxTree()
 
 
 
+def determineNexusType(value:any)->str:
+  """Returns a string representing the NEXUS type of a value"""
+
+  # NEED TO ADD TEST SUPPORT FOR any, blank, null, list, dict, ref, bool, datetime, double, money, base64, binary, hex, utf8
+
+  def is_str(value):
+    try: str(value); return True
+    except: return False
+
+  def is_int(value):
+    try: int(value); return True
+    except: return False
+
+  def is_float(value):
+    try: float(value); return True
+    except: return False
+
+  def is_number(value):
+    if is_int(value) or is_float(value): return True
+    else: return False
+
+  valueTypes = [] # matching types
+
+  """
+  specific test order
+  int, float, number before str because strs can contain numbers
+  """
+  if is_int(value): valueTypes.append('INT')
+  if is_float(value): valueTypes.append('FLOAT')
+  if is_number(value): valueTypes.append('NUMBER')
+  if is_str(value): valueTypes.append('STR')
+  else: valueTypes.append(type(value).__name__.upper())
+
+  return(valueTypes)
+
+  
+
+  
+
+
+
+
+
 # PARSE TOKENS from tokenizeScript returned object... NEXPARSER ENTRY POINT
 # Returns an Abstract Syntax Tree (AST) as object
 def parseTokens(tokenStack:object)->object:
@@ -572,7 +615,6 @@ def parseTokens(tokenStack:object)->object:
       
       # at this point an end of expression is always expected ... if expression end is missing, add it
       # exception to this rule is vars and consts, which may be assigned a value before expr end
-      print('here', tokenType, tokenValue)
       if peakNextTokenType() != "EXPREND" and not bypassEnd:
         tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
 
@@ -759,7 +801,7 @@ def parseTokens(tokenStack:object)->object:
         nodeRef = "ARG"
         nodeName = "LITERAL"
         nodeLine = tokenLineNumber
-        nodeArgs.update({"value":tokenValue})
+        nodeArgs.update({"types":determineNexusType(tokenValue), "value":tokenValue})
         nodeBody = {} # this will always be empty for generic args as they never have bodies/children
 
 

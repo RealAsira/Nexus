@@ -141,3 +141,29 @@ log   log of
 /*
 NEED TO CREATE VSCODE SYNTAX HIGHLIGHT EXTENSION
 */
+
+
+
+
+Nexus Types:
+any
+blank
+null
+str
+
+list
+dict
+ref
+
+bool
+datetime
+number
+int
+float
+double
+money
+
+base64
+binary
+hex
+utf8

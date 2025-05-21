@@ -130,7 +130,7 @@ allReservedTokens:dict = {
     
   'BOOL': 'type',
   'DATETIME': 'type',
-  'NUMB': 'type',       #super type of both int and float... generic number container than handles eitehr
+  'NUMBER': 'type',       #super type of both int and float... generic number container than handles eitehr
   'INT': 'type',        #trunc decimals to make whole number (signed)
   'FLOAT': 'type',      
   'DOUBLE': 'type',     #subtype of float.. currently no difference)
