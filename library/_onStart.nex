@@ -1,1 +1,1 @@
-@var phrase:str = "goodnight sky!";
+@var phrase:str = 'goodnight sky!';
