@@ -253,3 +253,9 @@ xmlDelimTokens:dict = {
   '/',  # first char in /> ..
   '</', # xml close-tag start
 }
+
+
+# build in methods and types they apply to (e.g strip is for strings only)
+methodTypes:dict = {
+  'strip': ['STR'],
+}

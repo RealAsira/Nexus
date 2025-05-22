@@ -1,1 +1,2 @@
 @var phrase:str = 'goodnight sky!';
+@phrase().strip();

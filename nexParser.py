@@ -10,6 +10,7 @@ exprTypeTokens = nexServerGlobals.exprTypeTokens
 stringDelimTokens = nexServerGlobals.stringDelimTokens
 xmlDelimTokens = nexServerGlobals.stringDelimTokens
 refTokens = nexServerGlobals.refTokens
+methodTypes = nexServerGlobals.methodTypes
 
 
 
@@ -86,6 +87,7 @@ def parseTokens(tokenStack:object)->object:
   #global stringDelimTokens
   #global xmlDelimTokens
   #global refTokens
+  #global methodTypes
 
   currentNode:dict = {}       # temp container for current node to be stored
   nodeID:int = 0              # unique id for each node
@@ -853,5 +855,5 @@ def parseTokens(tokenStack:object)->object:
     AST.update(currentNode)   # put into tree
     currentNode = None        # reset for next node
 
-  #print(json.dumps(AST.tree, indent=2))
+  print(json.dumps(AST.tree, indent=2))
   return (AST)
