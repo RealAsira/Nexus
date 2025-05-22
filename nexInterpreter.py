@@ -11,9 +11,10 @@ exprTypeTokens = nexServerGlobals.exprTypeTokens
 stringDelimTokens = nexServerGlobals.stringDelimTokens
 xmlDelimTokens = nexServerGlobals.stringDelimTokens
 refTokens = nexServerGlobals.refTokens
+methodTypes = nexServerGlobals.methodTypes
 
 variables:dict = {} # a list of references and values
-content:str = None # CONTENT INTERPRETED!!
+content:str = '' # CONTENT INTERPRETED!!
 
 
 
@@ -26,12 +27,11 @@ def interpretAST(AST:object)->str:
   #global stringDelimTokens
   #global xmlDelimTokens
   #global refTokens
+  global methodTypes
 
-
-  def interp_var_assignment(node:dict, nodeID:int, childReturns:list)->any:
+  def interp_var_assignment(node:dict, nodeID:int, childReturns:list)->None:
     """Interprets the assignment of a value to a variable"""
-    global variables
-    
+
     nodeType = node["nodeType"]
     nodeRef = node["nodeRef"]
     nodeName = node["nodeName"]
@@ -45,6 +45,7 @@ def interpretAST(AST:object)->str:
 
     isValidType = False
     for valueType in valueTypes:
+      if isValidType == True: continue
       if valueType in varTypes: isValidType = True
 
     if operation == "ASSIGN":
@@ -57,21 +58,98 @@ def interpretAST(AST:object)->str:
 
 
 
-  def interp_xxx(node:dict, nodeID:int, childReturns:list)->any:
-    """Placeholder"""
-    ...
+  def interp_ref_call(node:dict, nodeID:int, childReturns:list)->None:
+    """Run a call to a reference, such as var, function, object calls"""
+    global content
+
+    refName = childReturns[0]['refName']
+    refParams = childReturns[0]['refParams']
+    refMethods = childReturns[0]['refMethods']
+
+    refMode = None  # variables? functions? something else?
+    if refName in variables: refMode = 'var_call'
+    else: refMode = 'UNKNOWN_REF_MODE'
+
+
+  # proccess a call to a variable
+    if refMode == 'var_call': 
+      varValue = variables[refName]['value']
+      varTypes = variables[refName]['types']
+      if refMethods:
+        contentVal = interp_ref_methods(varValue, varTypes, refMethods)  # modify the value of 
+      else: contentVal = varValue
+      content += contentVal
+
+    else:
+      print(f'interp_ref_call for {refName} could not be completed... {refMode}')
 
 
 
+  def interp_ref_methods(value:any, valueTypes:list, methods:dict):
+    """
+    modifies a value depending on its type and methods
+    BUILT IN METHODS:
+    methods for any:
+    methods for blank:
+    methods for null:
+    methods for str: strip
+
+    methods for list:
+    methods for dict:
+    methods for ref:
+
+    methods for bool:
+    methods for datetime:
+    methods for number:
+    methods for int:
+    methods for float:
+    methods for double:
+    methods for money:
+
+    methods for base64:
+    methods for binary:
+    methods for hex:
+    methods for utf8:
+    """
+    global methodTypes
+    returnVal = value
+
+    # process each method independently 
+    for nodeID in methods:  # methods are passed as nodeID's
+      # get the method name and check its types
+      methodName = methods[nodeID]['nodeName']
+      if not methodName in methodTypes:
+        print(f'Method Warning! "{methodName.upper()}" is not a built-in method and custom type-methods don\'t exist yet!')
+      else: methodTypes = methodTypes[methodName]
+
+      # can this method be applied to this value?
+      isValidType = False 
+      for methodType in methodTypes:
+        if isValidType == True: continue
+        if methodType in valueTypes: isValidType = True
+
+      if isValidType:
+        # the type(s) this method can apply to matches the type(s) of the value... run the method
+        if methodName == 'strip': returnVal = returnVal.strip()
+      else:
+        print(f'Method "{methodName.upper()}" cannot be applied to value of type(s) {valueTypes} ... no change to value!')
+
+    return(returnVal)
+
+
+
+  exprMode = None # tracks what the current expression is (eg, var assignment, reference call, etc)
   def processNode(node:dict, nodeID:int, childReturns:list)->any:
     """Processes the node"""
     global variables
+    nonlocal exprMode
 
     nodeType = node["nodeType"]
     nodeRef = node["nodeRef"]
     nodeName = node["nodeName"]
     nodeArgs = node["nodeArgs"]
 
+    #print(nodeID, nodeType, nodeRef, nodeName, nodeArgs)
 
     if nodeType == "ROOT":
       """Functionality for root of AST"""
@@ -81,14 +159,12 @@ def interpretAST(AST:object)->str:
 
     elif nodeType == "EXPR":
       """Functionality for an expression call"""
-      # all children of an expression have been ... determine how it is interpretted
+      # exprMode was previously assigned... use to determine how to interpret the expression
 
-      # FUNCTION CURRENTLY ASSUMES VARIABLE VALUE ASSIGNMENTS ... 
-      # NEED TO INSTEAD USE RETURNED CHILDREN AS CONTEXT OF HOW TO PROCESS
-      print('TESTING VAR ASSIGNMENT', variables)
-      interp_var_assignment(node, nodeID, childReturns)
-      print('TESTING VAR ASSIGNMENT', variables)
-
+      if   exprMode == 'varAssign': interp_var_assignment(node, nodeID, childReturns)
+      elif exprMode == 'refCall': interp_ref_call(node, nodeID, childReturns)
+      exprMode = None # reset after interpreting
+      
 
 
     elif nodeType == "STRLITERAL":
@@ -126,9 +202,19 @@ def interpretAST(AST:object)->str:
         #value appended separately
 
         # create the placeholder variable, return the name in case it is needed
-        variables.update({f'{varName}': {'type': varTypes, 'value': None}})
+        variables.update({f'{varName}': {'types': varTypes, 'value': None}})
+        exprMode = 'varAssign'
         return({'varName': varName, 'varTypes': varTypes})
-        
+      
+
+      elif nodeRef == "ARG":
+        """handle calls to variables, functions, objects, etc"""
+        params = nodeArgs['params']
+        if 'methods' in nodeArgs: methods = nodeArgs['methods']
+        else: methods = {}
+        exprMode = 'refCall'
+        return({'refName':nodeName, 'refParams':params, 'refMethods':methods})
+
 
 
     elif nodeType == "OP":
@@ -177,5 +263,6 @@ def interpretAST(AST:object)->str:
   traverseAST(AST.tree[nodeID], nodeID)     # iterative processor entry point ... use full AST and root nodeID
   
   # EXIT POINT
-  print(json.dumps(AST.tree, indent=2))
-  return(json.dumps(AST.tree, indent=2))
+  #print(json.dumps(AST.tree, indent=2))  # USED FOR DEBUGGING
+  #return(json.dumps(AST.tree, indent=2)) # USED FOR DEBUGGING
+  return(content)                         # CONTENT IS GENERATED, RETURN IT
