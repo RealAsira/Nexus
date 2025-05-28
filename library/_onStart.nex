@@ -1,2 +1,8 @@
-@var phrase:str = 'goodnight sky!';
-@phrase().strip();
+@const phrase:str = 'goodnight sky!';
+@phrase;
+
+@const phrase:str = 'heelo there!';
+@phrase();
+
+@var phrase:str = 'heelo there!';
+@phrase();
