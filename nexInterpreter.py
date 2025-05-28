@@ -5,6 +5,7 @@ ALSO ASSIGNS VALS TO response_headers
 """
 
 import json
+import nexErrHandler as neh
 import nexServerGlobals
 allReservedTokens = nexServerGlobals.allReservedTokens
 exprTypeTokens = nexServerGlobals.exprTypeTokens
@@ -35,6 +36,7 @@ def interpretAST(AST:object)->str:
     nodeType = node["nodeType"]
     nodeRef = node["nodeRef"]
     nodeName = node["nodeName"]
+    nodeLineNumber = node["nodeLineNumber"]
     nodeArgs = node["nodeArgs"]
 
     varName = childReturns[0]['varName']
@@ -43,16 +45,27 @@ def interpretAST(AST:object)->str:
     value = childReturns[2]['argValue']
     valueTypes = childReturns[2]['argTypes']
 
-    isValidType = False
-    for valueType in valueTypes:
-      if isValidType == True: continue
-      if valueType in varTypes: isValidType = True
+    oldValue = variables[varName]['value']
+    mutable = variables[varName]['mutable']
 
-    if operation == "ASSIGN":
-      if not isValidType:                     # illegal type assignment
-        raise Exception(f"Cannot assign type {valueTypes} value to variable of value type(s) {varTypes}.")
-      else:
-        variables[varName]['value'] = value   # assign new value
+    # is either a variable (mutable) or is a constant that doesn't have a value yet
+    if mutable or (not mutable and oldValue is None):
+      isValidType = False
+      for valueType in valueTypes:
+        if isValidType == True: continue
+        if valueType in varTypes: isValidType = True
+
+      if operation == "ASSIGN":
+        if not isValidType:                     # illegal type assignment
+          try: raise neh.nexException(f"Cannot assign a(n) {valueTypes} value to @VAR of type(s) {varTypes}")
+          except neh.nexException as err: neh.nexError(err, True, None, nodeLineNumber)
+        else:
+          variables[varName]['value'] = value   # assign new value
+
+    else:
+      # no change is made to the value, supply warning to console
+      try: raise neh.nexException(f'Const @{varName.upper()} cannot be reassigned a new value')
+      except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
 
     return(None)
 
@@ -65,6 +78,7 @@ def interpretAST(AST:object)->str:
     refName = childReturns[0]['refName']
     refParams = childReturns[0]['refParams']
     refMethods = childReturns[0]['refMethods']
+    nodeLineNumber = node['nodeLineNumber']
 
     refMode = None  # variables? functions? something else?
     if refName in variables: refMode = 'var_call'
@@ -76,16 +90,22 @@ def interpretAST(AST:object)->str:
       varValue = variables[refName]['value']
       varTypes = variables[refName]['types']
       if refMethods:
-        contentVal = interp_ref_methods(varValue, varTypes, refMethods)  # modify the value of 
+        contentVal = interp_ref_methods(varValue, varTypes, refMethods, nodeLineNumber)  # modify the value of 
       else: contentVal = varValue
-      content += contentVal
+      if contentVal is None: contentVal = ''  # replace None with empty string since None can't concat to string
+
+      try:
+        content += contentVal
+      except:
+        try: raise neh.nexException(f'Could not append "{contentVal}" to server response')
+        except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
 
     else:
       print(f'interp_ref_call for {refName} could not be completed... {refMode}')
 
 
 
-  def interp_ref_methods(value:any, valueTypes:list, methods:dict):
+  def interp_ref_methods(value:any, valueTypes:list, methods:dict, nodeLineNumber:int):
     """
     modifies a value depending on its type and methods
     BUILT IN METHODS:
@@ -119,7 +139,8 @@ def interpretAST(AST:object)->str:
       # get the method name and check its types
       methodName = methods[nodeID]['nodeName']
       if not methodName in methodTypes:
-        print(f'Method Warning! "{methodName.upper()}" is not a built-in method and custom type-methods don\'t exist yet!')
+        try: raise neh.nexException(f'The ".{methodName.upper()}()" method doesn\'t exist')
+        except neh.nexException as err: neh.nexError(err, True, None, nodeLineNumber)
       else: methodTypes = methodTypes[methodName]
 
       # can this method be applied to this value?
@@ -132,7 +153,8 @@ def interpretAST(AST:object)->str:
         # the type(s) this method can apply to matches the type(s) of the value... run the method
         if methodName == 'strip': returnVal = returnVal.strip()
       else:
-        print(f'Method "{methodName.upper()}" cannot be applied to value of type(s) {valueTypes} ... no change to value!')
+        try: raise neh.nexException(f'The ".{methodName.upper()}()" method cannot be applied to value of type(s) {valueTypes}')
+        except neh.nexException as err: neh.nexError(err, True, None, nodeLineNumber)
 
     return(returnVal)
 
@@ -147,6 +169,7 @@ def interpretAST(AST:object)->str:
     nodeType = node["nodeType"]
     nodeRef = node["nodeRef"]
     nodeName = node["nodeName"]
+    nodeLineNumber = node["nodeLineNumber"]
     nodeArgs = node["nodeArgs"]
 
     #print(nodeID, nodeType, nodeRef, nodeName, nodeArgs)
@@ -199,12 +222,49 @@ def interpretAST(AST:object)->str:
         """handle variable declaration"""
         varName = nodeName
         varTypes = nodeArgs['returnTypes']
-        #value appended separately
+        # value appended separately
 
-        # create the placeholder variable, return the name in case it is needed
-        variables.update({f'{varName}': {'types': varTypes, 'value': None}})
-        exprMode = 'varAssign'
+        # previously existed
+        if varName in variables:
+          if variables[varName]['mutable']: # is an existing variable, not a constant
+            for varType in varTypes:
+              if varType not in variables[varName]['types']:
+                # check for type mismatches ... warn if mismatched
+                try: raise neh.nexException(f'Variable reassignment type mismatch for @{varName.upper()} (new: {varType}, old: {variables[varName]['types']})')
+                except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+
+            # assign new type(s) and empty value
+            variables[varName]['types'] = varTypes
+            variables[varName]['value'] = None
+
+          elif not variables[varName]['mutable']: # is an existing constant
+            try: raise neh.nexException(f'Cannot create @{varName.upper()} as a VAR because it is already an existing CONST')
+            except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+
+        # new variable ... create as placeholder
+        else: 
+          variables.update({f'{varName}': {'types': varTypes, 'value': None, 'mutable': True}})
+        
+        # return data to parent node
         return({'varName': varName, 'varTypes': varTypes})
+      
+
+      elif nodeRef == 'CONST':
+        """handle constant declaration"""
+        constName = nodeName
+        constTypes = nodeArgs['returnTypes']
+        # value appended separately
+
+        # can't change an existing constant
+        if constName in variables:
+          try: raise neh.nexException(f'Const @{constName.upper()} already exists (redeclaration warning)')
+          except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+
+        else:
+          variables.update({f'{constName}': {'types': constTypes, 'value': None, 'mutable': False}})
+
+        return({'varName': constName, 'varTypes': constTypes})  # next item is the assignment
+
       
 
       elif nodeRef == "ARG":
@@ -219,6 +279,9 @@ def interpretAST(AST:object)->str:
 
     elif nodeType == "OP":
       """Funtionality for an operator"""
+      # THIS CURRENTLY ASSUMES THE OPERATOR IS AN =
+      # in the future, this will handle differently depending on OP type
+      exprMode = 'varAssign'
       return('ASSIGN')
 
 
@@ -258,11 +321,19 @@ def interpretAST(AST:object)->str:
 
 
 
+
+
   # ENTRY POINT
+  print(json.dumps(AST.tree, indent=2))  # USED FOR DEBUGGING
   nodeID:int = next(iter(AST.tree.keys()))  # get first nodeID (entry point)
   traverseAST(AST.tree[nodeID], nodeID)     # iterative processor entry point ... use full AST and root nodeID
+
+  # print interpreter warnings then clear, before exit point
+  if len(neh.warnings) != 0:
+    print('INTERPRETER WARNINGS:')
+    for warning in neh.warnings:
+      print(warning)
+    neh.warnings.clear()
   
   # EXIT POINT
-  #print(json.dumps(AST.tree, indent=2))  # USED FOR DEBUGGING
-  #return(json.dumps(AST.tree, indent=2)) # USED FOR DEBUGGING
-  return(content)                         # CONTENT IS GENERATED, RETURN IT
+  return(content) # CONTENT IS GENERATED, RETURN IT

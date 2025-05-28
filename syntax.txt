@@ -3,22 +3,20 @@
 
 
 # variables - type declaration required, but can also be "any"
-@var bar:int = 0;     #immutable type... val can change
-@bar = 5;             #change/assign value
-@var bar2:any = 5;    #mutable type of "any"... val can change
-@bar2 = "now a string"
+@var bar:int;         #declare a variable of int type (type always required, regardless of assigning/reassigning val or not)
+@var bar:int = 0;     #assign a type and value to variable
+@var bar:any = 5;     #reassign a new type and value to variable (val and types are mutable)
 @var aString:any = "  #multi-line strings are allowed
   Some content
   and some more
 ";
-@var bar3:any;        #don't need to assign a value immediately
 
 
 
 # f-strings
-@var exclaim = '!!'
-@var appendStr = f', such as this one@exclaim()'
-@var fStr = f"F-strings can accept expressions in them@appendStr()"
+@var exclaim:str = '!!'
+@var appendStr:str = f', such as this one@exclaim()'
+@var fStr:str = f"F-strings can accept expressions in them@appendStr()"
 
 # f-strings (functional/formatted strings) allows for additional Nexus code to be written inline
 # strings with quotes " or apos ' can be used for f-strings
@@ -27,7 +25,7 @@
 
 # escape strings delims
 # An apos ' is used in this string but doesn't end the string since it is escaped using \
-@var escaped = 'Introducing talibytes\' web-dev language: Nexus!'
+@var escaped:str = 'Introducing talibytes\' web-dev language: Nexus!'
 
 
 
@@ -48,6 +46,12 @@
   @print(@calc(@num1 + @num2));
 }
 @add(@bar, @bar2);  #10
+
+# OR DOES THE FOLLOWING DEF SYNTAX MAKE MORE SENSE??
+# the diff being return type declaration position
+@def add:none (num1:float, num2:int:float) {
+  ...
+}
 
 
 

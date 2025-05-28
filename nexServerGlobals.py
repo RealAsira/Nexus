@@ -252,6 +252,7 @@ xmlDelimTokens:dict = {
   '/>', # xml open-tag self-close
   '/',  # first char in /> ..
   '</', # xml close-tag start
+  '|'
 }
 
 

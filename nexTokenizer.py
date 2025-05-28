@@ -1,6 +1,7 @@
 """
 TOKENIZER/LEXER CREATES "TOKENS" FROM A SCRIPT
 """
+import nexErrHandler as neh
 
 import nexServerGlobals
 allReservedTokens = nexServerGlobals.allReservedTokens
@@ -165,9 +166,13 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
           return aToken
 
         else:
-          raise Exception(f"XML token-type lookup error on char {aToken}")
+          try: raise neh.nexException(f'Failed XML token-type lookup on "{aToken}"')
+          except neh.nexException as err:
+            neh.nexError(err, False, scriptName, tokenLineNumber)
+            processingXML = False
+            return aToken
 
-          
+
     # reserved single char token (including space delim)
     elif aToken.upper() in allReservedTokens:
       #print(f"c. Found token {aToken.replace(' ', '_')}")
@@ -323,5 +328,12 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
     print(item)
   print('\n')
   """
+
+  # print tokenizer warnings then clear
+  if len(neh.warnings) != 0:
+    print('TOKENIZER WARNINGS:')
+    for warning in neh.warnings:
+      print(warning)
+    neh.warnings.clear()
   
   return (tokenStack)
