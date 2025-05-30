@@ -336,4 +336,4 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
       print(warning)
     neh.warnings.clear()
   
-  return (tokenStack)
+  return ((tokenStack, scriptName))

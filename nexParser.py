@@ -81,7 +81,7 @@ def determineNexusType(value:any)->str:
 
 # PARSE TOKENS from tokenizeScript returned object... NEXPARSER ENTRY POINT
 # Returns an Abstract Syntax Tree (AST) as object
-def parseTokens(tokenStack:object)->object:
+def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->object:
   """Initialize the parsing of tokens"""
   #global allReservedTokens
   #global exprTypeTokens
@@ -122,7 +122,7 @@ def parseTokens(tokenStack:object)->object:
       tokenStack.pop()
     else:
       try: raise neh.nexException('Expected more tokens but token stack is empty')
-      except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+      except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
 
 
 
@@ -176,7 +176,7 @@ def parseTokens(tokenStack:object)->object:
       # check that next token is of type EXPRTYPE (:)
       if not peakNextTokenType() == "EXPRTYPE":
         try: raise neh.nexException('f"Expecting TYPE-INDICATOR (:) but found {tokenValue}({tokenType})')
-        except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+        except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
       else:
         getNextToken()  # eat EXPRTYPE (:)
       
@@ -193,7 +193,7 @@ def parseTokens(tokenStack:object)->object:
           
         else: 
           try: raise neh.nexException(f'{tokenValue}({tokenType}) is not a valid type')
-          except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+          except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
         
       return(typeList)
     
@@ -254,7 +254,7 @@ def parseTokens(tokenStack:object)->object:
     # end of script shouldn't be stored
     elif tokenType == "SCPTEND":
       try: raise neh.nexException(f"SCRPTEND token wasn't eaten as expected")
-      except neh.nexException as err: neh.nexError(err, True, None, nodeLine)
+      except neh.nexException as err: neh.nexError(err, True, scriptName, nodeLine)
 
       nodeType = tokenType    # end of script
       nodeRef = None          # override to no ref
@@ -323,42 +323,13 @@ def parseTokens(tokenStack:object)->object:
     elif tokenType == "REF":
       """
       List of built-in ref-typed expressions
-      iv, nv, abort, stop, cookie, httpget, httppost, output, sleep, wait, rspns_header, rspns_redir,
+      abort, stop, cookie, httpget, httppost, output, sleep, wait, rspns_header, rspns_redir,
       calc, min, max, chr, ord, date, now, today, guid, random,
       def, getglobal, nonlocal, print, return, class, object, self, library, use
       tern, if, switch, when, else, const, var
       """
       
-      match tokenValue:
-        case "IV":
-          """
-          example: @iv(1); @iv(@someVar);
-          returns true if expression evaluates to true
-          """
-          thisNodeID = nodeID
-          nodeType = tokenType
-          nodeRef = tokenValue
-          nodeName = "ISVALID"
-          nodeLine = tokenLineNumber
-          nodeArgs = {}
-          nodeArgs.update({"params":getParams()})
-          nodeBody = {}
-          
-
-        case "NV":
-          """
-          example: @nv(1); @nv(@someVar);
-          returns true if expression evaluates to false
-          """
-          thisNodeID = nodeID
-          nodeType = tokenType
-          nodeRef = tokenValue
-          nodeName = "NOTVALID"
-          nodeLine = tokenLineNumber
-          nodeArgs = {}
-          nodeArgs.update({"params":getParams()})
-          nodeBody = {}
-          
+      match tokenValue:         
 
         #case "ABORT":
 
@@ -456,7 +427,7 @@ def parseTokens(tokenStack:object)->object:
             nodeName = tokenValue
           else:
             try: raise neh.nexException("@DEF requires NAME")
-            except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+            except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
           
           # get parameters for function definition then return type(s)
           nodeArgs.update({"params":getParams()})
@@ -557,7 +528,7 @@ def parseTokens(tokenStack:object)->object:
             nodeName = tokenValue
           else:
             try: raise neh.nexException(f"@CONST requires NAME")
-            except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+            except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
           
           # const expression does not require getParams()
           # next part of syntax is always :[TYPE] (exactly one, not "any"-type)
@@ -566,17 +537,17 @@ def parseTokens(tokenStack:object)->object:
           # exactly one type
           if len(nodeArgs['returnTypes']) > 1 or len(nodeArgs['returnTypes']) == 0:
             try: raise neh.nexException(f"@CONST requires exactly ONE type")
-            except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+            except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
           
           # type can't be "ANY"
           if nodeArgs['returnTypes'][0] == "ANY":
             try: raise neh.nexException(f"@CONST cannot be of 'ANY' type")
-            except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+            except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
           
           # must have a value assigned immediately
           if peakNextTokenValue() != "=": # using nextTokenValue since there are many types of OP tokenTypes but only one is allowed
             try: raise neh.nexException(f"@CONST requires ASSIGNMENT (=)")
-            except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+            except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
           
           if peakNextTokenValue() == "=":
             bypassEnd = True  # bypass the EXPREND auto-insert if it is missing (in this case, it should be missing since an OP is found)
@@ -602,7 +573,7 @@ def parseTokens(tokenStack:object)->object:
             nodeName = tokenValue
           else:
             try: raise neh.nexException(f"@VAR requires NAME")
-            except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+            except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
           
           # var expression does not require getParams()               
           # next part of syntax is always :[TYPE] ... or multiple types (the types the variable can be, ie returnTypes)
@@ -610,7 +581,7 @@ def parseTokens(tokenStack:object)->object:
           
           if peakNextTokenType() not in ["OP", "EXPREND"]:
             try: raise neh.nexException(f"@VAR expecting ASSIGNMENT (=) or EXPRESSION END (;)")
-            except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+            except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
           
           if peakNextTokenValue() == "=":
             bypassEnd = True  # bypass the EXPREND auto-insert if it is missing (in this case, it should be missing since an OP is found)
@@ -807,7 +778,7 @@ def parseTokens(tokenStack:object)->object:
         # assign default value, delimit, or see end of params.
         if peakNextTokenType() not in ["OP", "EXPRDLM", 'PARENCLS']:
           try: raise neh.nexException(f"PARAMETER expecting ASSIGNMENT (=) or DELIM (,)")
-          except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+          except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
 
         
       # generic arg (such as literals, strings, etc)
@@ -836,7 +807,7 @@ def parseTokens(tokenStack:object)->object:
         nodeName = tokenValue
       else:
         try: raise neh.nexException(f"METHOD requires NAME")
-        except neh.nexException as err: neh.nexError(err, True, None, tokenLineNumber)
+        except neh.nexException as err: neh.nexError(err, True, scriptName, tokenLineNumber)
       
       # next token must be args (even if none/null/blank are supplied)
       nodeArgs.update({"params":getParams()})
@@ -877,4 +848,4 @@ def parseTokens(tokenStack:object)->object:
     neh.warnings.clear()
 
   #print(json.dumps(AST.tree, indent=2))  # USED FOR DEBUGGING
-  return (AST)
+  return ((AST, scriptName))

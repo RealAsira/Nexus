@@ -21,7 +21,7 @@ content:str = '' # CONTENT INTERPRETED!!
 
 
 
-def interpretAST(AST:object)->str:
+def interpretAST(AST:object, scriptName:str = "Unknown Nexus Module")->str:
   """USES AST TO GENERATE AN OUTPUT"""
   #global allReservedTokens
   #global exprTypeTokens
@@ -58,14 +58,14 @@ def interpretAST(AST:object)->str:
       if operation == "ASSIGN":
         if not isValidType:                     # illegal type assignment
           try: raise neh.nexException(f"Cannot assign a(n) {valueTypes} value to @VAR of type(s) {varTypes}")
-          except neh.nexException as err: neh.nexError(err, True, None, nodeLineNumber)
+          except neh.nexException as err: neh.nexError(err, True, scriptName, nodeLineNumber)
         else:
           variables[varName]['value'] = value   # assign new value
 
     else:
       # no change is made to the value, supply warning to console
       try: raise neh.nexException(f'Const @{varName.upper()} cannot be reassigned a new value')
-      except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+      except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
 
     return(None)
 
@@ -98,7 +98,7 @@ def interpretAST(AST:object)->str:
         content += contentVal
       except:
         try: raise neh.nexException(f'Could not append "{contentVal}" to server response')
-        except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+        except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
 
     else:
       print(f'interp_ref_call for {refName} could not be completed... {refMode}')
@@ -140,7 +140,7 @@ def interpretAST(AST:object)->str:
       methodName = methods[nodeID]['nodeName']
       if not methodName in methodTypes:
         try: raise neh.nexException(f'The ".{methodName.upper()}()" method doesn\'t exist')
-        except neh.nexException as err: neh.nexError(err, True, None, nodeLineNumber)
+        except neh.nexException as err: neh.nexError(err, True, scriptName, nodeLineNumber)
       else: methodTypes = methodTypes[methodName]
 
       # can this method be applied to this value?
@@ -154,7 +154,7 @@ def interpretAST(AST:object)->str:
         if methodName == 'strip': returnVal = returnVal.strip()
       else:
         try: raise neh.nexException(f'The ".{methodName.upper()}()" method cannot be applied to value of type(s) {valueTypes}')
-        except neh.nexException as err: neh.nexError(err, True, None, nodeLineNumber)
+        except neh.nexException as err: neh.nexError(err, True, scriptName, nodeLineNumber)
 
     return(returnVal)
 
@@ -212,7 +212,7 @@ def interpretAST(AST:object)->str:
       """
       Functionality for an expression
       List of built-in ref-typed expressions:
-      iv, nv, abort, stop, cookie, httpget, httppost, output, sleep, wait, rspns_header, rspns_redir,
+      abort, stop, cookie, httpget, httppost, output, sleep, wait, rspns_header, rspns_redir,
       calc, min, max, chr, ord, date, now, today, guid, random,
       def, getglobal, nonlocal, print, return, class, object, self, library, use
       tern, if, switch, when, else, const, var
@@ -231,7 +231,7 @@ def interpretAST(AST:object)->str:
               if varType not in variables[varName]['types']:
                 # check for type mismatches ... warn if mismatched
                 try: raise neh.nexException(f'Variable reassignment type mismatch for @{varName.upper()} (new: {varType}, old: {variables[varName]['types']})')
-                except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+                except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
 
             # assign new type(s) and empty value
             variables[varName]['types'] = varTypes
@@ -239,7 +239,7 @@ def interpretAST(AST:object)->str:
 
           elif not variables[varName]['mutable']: # is an existing constant
             try: raise neh.nexException(f'Cannot create @{varName.upper()} as a VAR because it is already an existing CONST')
-            except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+            except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
 
         # new variable ... create as placeholder
         else: 
@@ -258,7 +258,7 @@ def interpretAST(AST:object)->str:
         # can't change an existing constant
         if constName in variables:
           try: raise neh.nexException(f'Const @{constName.upper()} already exists (redeclaration warning)')
-          except neh.nexException as err: neh.nexError(err, False, None, nodeLineNumber)
+          except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
 
         else:
           variables.update({f'{constName}': {'types': constTypes, 'value': None, 'mutable': False}})
@@ -336,4 +336,4 @@ def interpretAST(AST:object)->str:
     neh.warnings.clear()
   
   # EXIT POINT
-  return(content) # CONTENT IS GENERATED, RETURN IT
+  return((content, scriptName)) # CONTENT IS GENERATED, RETURN IT
