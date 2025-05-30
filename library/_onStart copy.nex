@@ -1,5 +1,4 @@
 @var msg:str = "Goodnight sky!"; @msg.strip();
-@iv(@msg);
 
 @var num1:int = 1;
 @var num2:int = 2;

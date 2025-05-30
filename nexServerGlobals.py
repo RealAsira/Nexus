@@ -52,8 +52,8 @@ allReservedTokens:dict = {
   #'NOTANY': 'ref',    #!(@any)... @not(@any(...))
   #'NEITHER': 'ref',   #like none but only two expressions
   #'NOT': 'ref',       #same as !() but as reference
-  'IV': 'ref',        #value is non-null, non-blank
-  'NV': 'ref',        #value is null or blank
+  #'IV': 'ref',        #value is non-null, non-blank
+  #'NV': 'ref',        #value is null or blank
 
   # Operators
   '+': 'op',    
@@ -184,8 +184,8 @@ refTokens = {
   #'NOTANY': 'ref',    #!(@any)... @not(@any(...))
   #'NEITHER': 'ref',   #like none but only two expressions
   #'NOT': 'ref',       #same as !() but as reference
-  'IV': 'ref',        #value is non-null, non-blank
-  'NV': 'ref',        #value is null or blank
+  #'IV': 'ref',        #value is non-null, non-blank
+  #'NV': 'ref',        #value is null or blank
 
   # Keywords (reserved references)
   'ABORT': 'ref',     #kill entire response w/o sending anything
