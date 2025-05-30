@@ -26,7 +26,7 @@ class nexException(Exception):
 
   
 
-def nexError(err:str, fatal=False, moduleName:str='unidentified', lineNumber:int=0):
+def nexError(err:str, fatal=False, moduleName:str='Unknown Nexus Module', lineNumber:int=0):
   """call on nexus exception to handle"""
   global warnings, fatalError
 

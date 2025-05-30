@@ -138,15 +138,21 @@ def constructResponse() -> bytes:
 
   # attempt tokenization
   try:
-    tokenStack:object = tokenizeScript(_onStartContent)
+    tokenizedScript:tuple = tokenizeScript(_onStartContent, '_onStart')
+    tokenStack:object = tokenizedScript[0]
+    scriptName:str = tokenizedScript[1]
 
     # attempt parse
     try:
-      AST:object = parseTokens(tokenStack)
+      parsedTokens:tuple = parseTokens(tokenStack, scriptName)
+      AST:object = parsedTokens[0]
+      scriptName:str = parsedTokens[1]
 
       # attempt interpret
       try:
-        response_content = interpretAST(AST)
+        interprettedAST:tuple = interpretAST(AST, scriptName)
+        response_content = interprettedAST[0]
+        scriptName:str = interprettedAST[1]
       
       except Exception as err:
         print(f"Fatal Error: Could not interpret the AST ... Error: {str(err)}")

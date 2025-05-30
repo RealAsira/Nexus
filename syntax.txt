@@ -4,7 +4,7 @@
 
 # variables - type declaration required, but can also be "any"
 @var bar:int;         #declare a variable of int type (type always required, regardless of assigning/reassigning val or not)
-@var bar:int = 0;     #assign a type and value to variable
+@var bar:int = 0;     #assign a type and value to variable (and declare it if it doesn't exist)
 @var bar:any = 5;     #reassign a new type and value to variable (val and types are mutable)
 @var aString:any = "  #multi-line strings are allowed
   Some content
@@ -149,25 +149,33 @@ NEED TO CREATE VSCODE SYNTAX HIGHLIGHT EXTENSION
 
 
 
-Nexus Types:
-any
-blank
-null
-str
+Nexus Types & Associated Methods:
 
-list
-dict
-ref
+# ChatGPT was given the following list of types and asked to generate a list of applicable methods for them
+# The list has not been reviewed and is not finalized
 
-bool
-datetime
-number
-int
-float
-double
-money
+any       .alt(), .asBool(), .asBoolean(), .asFloat(), .asInt(), .asInteger(), .asMoney(), .asNumber(), .asString(), .asValue(), .copy(), .is(), .isBlank(), .isEqual(), .isNot(), .isNotEqual(), .isNull(), .isNumber(), .nullifblank(), .saveToFile(), .set(), .setValue(), .type(), .with(), .whenNull(), .whenBlank(), .alt(), .isTrue(), .isFalse()
+blank     .isBlank()
+null      .isNull()
+str       .append(), .asBase64(), .asBool(), .asBoolean(), .asDate(), .asFloat(), .asHex(), .asInt(), .asInteger(), .asMoney(), .asNumber(), .asString(), .asUTF8(), .asValue(), .asSQLString(), .asc(), .charIndex(), .contains(), .decode(), .encode(), .is(), .isBlank(), .isEqual(), .isNot(), .isNotEqual(), .length(), .lower(), .prepend(), .replace(), .textBetween(), .trim(), .type(), .URIEncode(), .URLEncode(), .URLDecode(), .with(), .copy(), .saveToFile()
 
-base64
-binary
-hex
-utf8
+list      .append(), .contains(), .is(), .isEqual(), .isNot(), .isNotEqual(), .length(), .prepend(), .type(), .with(), .copy(), .saveToFile()
+dict      .contains(), .is(), .isEqual(), .isNot(), .isNotEqual(), .key(), .length(), .set(), .setValue(), .type(), .with(), .copy(), .saveToFile()
+ref       .address(), .hide(), .is(), .isEqual(), .isNot(), .isNotEqual(), .nodeID(), .set(), .setValue(), .type(), .with(), .copy(), .saveToFile()
+json
+xml
+
+def
+
+bool      .is(), .isEqual(), .isNot(), .isNotEqual(), .type(), .with(), .copy(), .saveToFile()
+datetime  .add(), .asDate(), .asSQLDate(), .between(), .formatDate(), .is(), .isBetween(), .isEqual(), .isGreaterThan(), .isLessThan(), .isNot(), .isNotEqual(), .sub(), .type(), .with(), .copy(), .saveToFile()
+number    .absolute(), .add(), .asBool(), .asBoolean(), .asFloat(), .asInt(), .asInteger(), .asMoney(), .asNumber(), .asString(), .asValue(), .atLeast(), .atMost(), .between(), .dec(), .formatNumber(), .inc(), .is(), .isBetween(), .isEqual(), .isGreatAs(), .isGreaterThan(), .isLessAs(), .isLessThan(), .isNot(), .isNotEqual(), .isNumber(), .mod(), .sub(), .type(), .with(), @trunc(), .copy(), .saveToFile()
+int       .absolute(), .add(), .asBool(), .asBoolean(), .asFloat(), .asInt(), .asInteger(), .asMoney(), .asNumber(), .asString(), .asValue(), .atLeast(), .atMost(), .between(), .dec(), .formatNumber(), .inc(), .is(), .isBetween(), .isEqual(), .isGreatAs(), .isGreaterThan(), .isLessAs(), .isLessThan(), .isNot(), .isNotEqual(), .isNumber(), .mod(), .sub(), .type(), .with(), @trunc(), .isEven(), .isOdd(), .copy(), .saveToFile()
+float     .absolute(), .add(), .asBool(), .asBoolean(), .asFloat(), .asInt(), .asInteger(), .asMoney(), .asNumber(), .asString(), .asValue(), .atLeast(), .atMost(), .between(), .dec(), .formatNumber(), .inc(), .is(), .isBetween(), .isEqual(), .isGreatAs(), .isGreaterThan(), .isLessAs(), .isLessThan(), .isNot(), .isNotEqual(), .isNumber(), .mod(), .sub(), .type(), .with(), @trunc(), .copy(), .saveToFile()
+double    .absolute(), .add(), .asBool(), .asBoolean(), .asFloat(), .asInt(), .asInteger(), .asMoney(), .asNumber(), .asString(), .asValue(), .atLeast(), .atMost(), .between(), .dec(), .formatNumber(), .inc(), .is(), .isBetween(), .isEqual(), .isGreatAs(), .isGreaterThan(), .isLessAs(), .isLessThan(), .isNot(), .isNotEqual(), .isNumber(), .mod(), .sub(), .type(), .with(), @trunc(), .copy(), .saveToFile()
+money     .absolute(), .add(), .asBool(), .asBoolean(), .asFloat(), .asInt(), .asInteger(), .asMoney(), .asNumber(), .asString(), .asValue(), .atLeast(), .atMost(), .between(), .dec(), .formatNumber(), .inc(), .is(), .isBetween(), .isEqual(), .isGreatAs(), .isGreaterThan(), .isLessAs(), .isLessThan(), .isNot(), .isNotEqual(), .isNumber(), .mod(), .sub(), .type(), .with(), @trunc(), .asSQLMoney(), .copy(), .saveToFile()
+
+base64    .is(), .isEqual(), .isNot(), .isNotEqual(), .length(), .type(), .with(), .copy(), .saveToFile()
+binary    .asBase64(), .asHex(), .asUTF8(), .contentType(), .decode(), .encode(), .is(), .isEqual(), .isNot(), .isNotEqual(), .length(), .type(), .with(), .copy(), .saveToFile()
+hex       .is(), .isEqual(), .isNot(), .isNotEqual(), .length(), .type(), .with(), .copy(), .saveToFile()
+utf8      .asBase64(), .contentType(), .decode(), .encode(), .is(), .isEqual(), .isNot(), .isNotEqual(), .length(), .type(), .with(), .copy(), .saveToFile()
