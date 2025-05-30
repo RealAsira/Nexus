@@ -1,8 +1,6 @@
-@const phrase:str = 'goodnight sky!';
-@phrase;
+@const phrase:str = '
+goodnight sky!
 
-@const phrase:str = 'heelo there!';
-@phrase();
-
-@var phrase:str = 'heelo there!';
-@phrase();
+what on earth!
+';
+@phrase.weird();
