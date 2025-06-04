@@ -173,32 +173,34 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
             return aToken
 
 
+    # vanilla string
+    elif processingStr and not processingFStr:     
+      endPos:int = findNextReservedSingleCharToken(processingStrDelim)
+      aToken = script[pos:endPos]
+      #print(f"e. Found token {aToken}")
+      return aToken
+    
+
     # reserved single char token (including space delim)
     elif aToken.upper() in allReservedTokens:
       #print(f"c. Found token {aToken.replace(' ', '_')}")
       return aToken
 
 
-    # multi-character reserved or generic arg..
-    else:
-      # simply find end of this token by getting start of next
-      if not processingStr and not processingFStr:
-        endPos:int = findNextReservedSingleCharToken()
-        aToken = script[pos:endPos]
-        #print(f"d. Found token {aToken}")
+    # functional string - tokenize each possible token in it
+    elif processingStr and processingFStr:
+      endPos:int = findNextReservedSingleCharToken()
+      aToken = script[pos:endPos]
+      #print(f"f. Found token {aToken}")
+      return aToken
+    
 
-      # vanilla string
-      if processingStr and not processingFStr:     
-        endPos:int = findNextReservedSingleCharToken(processingStrDelim)
-        aToken = script[pos:endPos]
-        #print(f"e. Found token {aToken}")
-
-      # functional string - tokenize each possible token in it
-      if processingStr and processingFStr:
-        endPos:int = findNextReservedSingleCharToken()
-        aToken = script[pos:endPos]
-        #print(f"f. Found token {aToken}")
-
+    # multi-character reserved or generic arg...
+    # simply find end of this token by getting start of next
+    elif not processingStr and not processingFStr:
+      endPos:int = findNextReservedSingleCharToken()
+      aToken = script[pos:endPos]
+      #print(f"d. Found token {aToken}")
       return aToken
 
 
@@ -218,7 +220,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
     # new token
     if currentToken is None:
       currentToken = getToken() # now that the token is found, the next step will store it
-      #print(f"New token found: {currentToken})
+      #print(f"New token found: {currentToken}")
       #print(currentToken, allReservedTokens[currentToken.upper()])
 
       # space character delims tokens ... doesn't get stored
@@ -238,11 +240,11 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
             tokenStack.insert(tokenLineNumber, allReservedTokens[currentToken.upper()].upper(), currentToken.upper())
   
           elif not isEscaped:
-            #print(f"Stored token as strStrt {currentToken}")
+            #print(f"Stored token as STRLITERAL {currentToken}")
             tokenStack.insert(tokenLineNumber, "STRLITERAL", currentToken.upper())
 
         elif not processingStr:
-          #print(f"Stored token as strEnd {currentToken}")
+          #print(f"Stored token as STREND {currentToken}")
           tokenStack.insert(tokenLineNumber, "STREND", currentToken.upper())
 
         pos += len(currentToken)
@@ -328,6 +330,7 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
     print(item)
   print('\n')
   """
+
 
   # print tokenizer warnings then clear
   if len(neh.warnings) != 0:

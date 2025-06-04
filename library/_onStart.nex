@@ -1,6 +1,4 @@
-@const phrase:str = '
-goodnight sky!
+@var num1:int = 5; @var num2:int = 10;
+@var aString:str = "@num1()@num2()";
 
-what on earth!
-';
-@phrase.weird();
+@aString();
