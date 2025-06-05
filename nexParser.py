@@ -283,7 +283,6 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
       nodeArgs = {}
 
       if peakLastTokenType() == 'OP': rhs = True  # now handling the right hand side of an assignment
-      print('here1', rhs, peakNextTokenValue())
 
       # all following nodes are children until this expression ends
       while True:
@@ -777,7 +776,6 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
           tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
 
         # this node is a user defined ref-call that is on the right-side of an expression ... therefore it MUST have an implied end
-        print('here2', rhs)
         if rhs:
           #rhs = False # reset
           tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
