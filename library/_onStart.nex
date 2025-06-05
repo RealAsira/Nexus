@@ -1,4 +1,5 @@
-@var num1:int = 5; @var num2:int = 10;
-@var aString:str = "@num1()@num2()";
+@var num1:int = 5;
+@var num2:int = @num1();
 
-@aString();
+@num2();
+# returns 5 to client

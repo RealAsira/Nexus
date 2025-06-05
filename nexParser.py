@@ -99,11 +99,15 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
   tokenType:str = None        # currentToken[1]
   tokenValue:any = None       # currentToken[2]
 
+  # these are used later to modify how the parser handles tokens
+  bypassEnd:bool = False    # sometimes an assumed EXPREND is added ... this bypasses it
+  rhs:bool = False          # lets parser know the right hand side of a statement is being processed
 
 
   def getNextToken() -> None:
     """Clear currentToken data and advance to the next token if it exists"""
     nonlocal tokenStack, lastToken, currentToken, tokenLineNumber, tokenType, tokenValue
+    nonlocal bypassEnd, rhs
 
     # clean the token data
     lastToken = currentToken  # move current token to last token
@@ -143,6 +147,12 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
   def peakLastTokenType()->str:
     """Peak at the previous token type without altering the stack"""
     return(lastToken[1])
+  
+
+
+  def peakLastTokenValue()->str:
+    """Peak at the previous token value without altering the stack"""
+    return(lastToken[2])
 
 
 
@@ -150,6 +160,7 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
     """Returns all of the information about a node, by processing up the tokenStack starting at the bottom tokenStack.stack[0]"""
     nonlocal tokenStack, currentToken, tokenLineNumber, tokenType, tokenValue
     nonlocal nodeID
+    nonlocal bypassEnd, rhs
 
     nodeID += 1             # inc to next nodeID
     thisNodeID = None       # thisNodeID is used when storing nested nodes to a parent node... thisNodeID is the parent's nodeID
@@ -159,8 +170,6 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
     nodeLine:int = None     # line number
     nodeArgs:dict = {}      # any args that node needs to function... non-iterative and applies only to this node
     nodeBody:dict = {}      # child nodes (eg function definition... iterative and can be many layers deep)
-
-
 
     def formattedNode(thisNodeID:int=nodeID):
       """Formats the node into a dictionary"""
@@ -272,6 +281,8 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
       nodeName = None
       nodeLine = tokenLineNumber
       nodeArgs = {}
+
+      if peakLastTokenType() == 'OP': rhs = True  # now handling the right hand side of an assignment
 
       # all following nodes are children until this expression ends
       while True:
@@ -610,6 +621,7 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
       List of built in operators:
       +, -, *, /, **, //, %, +=, -=, *=, /=, =
       """
+
       match tokenValue:
         case "+":
           """Adds right value to left value"""
@@ -762,6 +774,12 @@ def parseTokens(tokenStack:object, scriptName:str = "Uknown Nexus Module")->obje
         # end of methods implies end of expression ... if expression end is missing, add it
         if peakNextTokenType() != "EXPREND":
           tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
+
+        # this node is a user defined ref-call that is on the right-side of an expression ... therefore it MUST have an implied end
+        if rhs:
+          #rhs = False # reset
+          tokenStack.insert(tokenLineNumber, "EXPREND", ";", 0)
+
 
       # this is a definition parameter
       elif peakNextTokenType() == "EXPRTYPE":
