@@ -325,11 +325,11 @@ def tokenizeScript(script:str, scriptName:str = "Unknown Nexus Module", tokenSta
   
   """
   print(f"\n{script}\n")
+  """
   print("TOKEN STACK:\n")
   for item in tokenStack.stack:
     print(item)
   print('\n')
-  """
 
 
   # print tokenizer warnings then clear
