@@ -1,6 +1,7 @@
-# Nexus is case iNsenSItIVe
+# NOTE: THIS FILE IS INTENDED AS A SUPPORT WHILE WRITING THE LANGUAGE
+# IT IS NOT INTENDED TO BE A CONVENTIONS LIST AND WILL CHANGE OVER TIME
 
-
+# Please see README_nexus_convention for additional information on name and writing conventions.
 
 # variables - type declaration required, but can also be "any"
 @var bar:int;         #declare a variable of int type (type always required, regardless of assigning/reassigning val or not)

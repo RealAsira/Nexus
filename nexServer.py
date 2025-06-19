@@ -80,7 +80,12 @@ def setupSockets()->None:
       # init sockets
       aSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       aSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-      aSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+      if hasattr(socket, "SO_REUSEPORT"):
+        try:
+          aSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        except:
+          print('System does not utilize SO_REUSEPORT')
+          pass
       sockets.append(aSocket)
 
       # bind the socket to a port
