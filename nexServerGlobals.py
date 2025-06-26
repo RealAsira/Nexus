@@ -1,6 +1,6 @@
 
 # ALL reserved symbols and keywords in the language
-allReservedTokens:dict = {
+all_reserved_tokens:dict = {
   # Misc
   ' ': 'whitespace',
   '\n': 'nl',
@@ -149,7 +149,7 @@ allReservedTokens:dict = {
 
 
 # these types are built into Nexus
-exprTypeTokens = {
+expr_type_tokens = {
   # Nexus Primitive Types
   'ANY': 'type',      #a generic type that will attempt to determine the actual type when called
   'BLANK': 'type',    #value is "empty" or "blank"
@@ -176,7 +176,7 @@ exprTypeTokens = {
 
 
 # built-in references pointing to built-in functionality
-refTokens = {
+ref_type_tokens = {
   # Binary-ish Comparison
   #'ALL': 'ref',       #@all() - ie several chained &&    
   #'ANY': 'ref',       #several chained ||
@@ -239,14 +239,14 @@ refTokens = {
 
 
 # these tokens are concatted instead
-stringDelimTokens:dict = {
+string_delim_tokens:dict = {
   "'",  # start or end of a string
   '"',
 }
 
 
 # these tokens require additional processing to determine if they are comparison operators or xml/html
-xmlDelimTokens:dict = {
+xml_delim_tokens:dict = {
   '<',  # possible xml open-tag start
   '>',  # possible xml open-tag end
   '/>', # xml open-tag self-close
@@ -257,6 +257,6 @@ xmlDelimTokens:dict = {
 
 
 # build in methods and types they apply to (e.g strip is for strings only)
-methodTypes:dict = {
+method_types:dict = {
   'strip': ['STR'],
 }

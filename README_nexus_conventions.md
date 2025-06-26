@@ -11,6 +11,7 @@ In an effort to keep naming consistent across Nexus code, the following variable
 |Functions  |`camelCase` |`parseTokens(...)`|
 |Methods    |`camelCase` |`popToken(...)`   |
 |Classes    |`PascalCase`|`TokenStack()`    |
+|Files      |`PascalCase`|`_OnStart.nex`    |
 
 ## Notes
 

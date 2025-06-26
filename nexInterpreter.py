@@ -5,14 +5,14 @@ ALSO ASSIGNS VALS TO response_headers
 """
 
 import json
-import nexErrHandler as neh
-import nexServerGlobals
-allReservedTokens = nexServerGlobals.allReservedTokens
-exprTypeTokens = nexServerGlobals.exprTypeTokens
-stringDelimTokens = nexServerGlobals.stringDelimTokens
-xmlDelimTokens = nexServerGlobals.stringDelimTokens
-refTokens = nexServerGlobals.refTokens
-methodTypes = nexServerGlobals.methodTypes
+import NexErrorHandler as neh
+import NexServerGlobals
+all_reserved_tokens = NexServerGlobals.all_reserved_tokens
+expr_type_tokens = NexServerGlobals.expr_type_tokens
+string_delim_tokens = NexServerGlobals.string_delim_tokens
+xml_delim_tokens = NexServerGlobals.xml_delim_tokens
+ref_type_tokens = NexServerGlobals.ref_type_tokens
+method_types = NexServerGlobals.method_types
 
 variables:dict = {} # a list of references and values
 content:str = '' # CONTENT INTERPRETED!!
@@ -21,91 +21,92 @@ content:str = '' # CONTENT INTERPRETED!!
 
 
 
-def interpretAST(AST:object, scriptName:str = "Unknown Nexus Module")->str:
+def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->str:
   """USES AST TO GENERATE AN OUTPUT"""
-  #global allReservedTokens
-  #global exprTypeTokens
-  #global stringDelimTokens
-  #global xmlDelimTokens
-  #global refTokens
-  global methodTypes
+  #global all_reserved_tokens
+  #global expr_type_tokens
+  #global string_delim_tokens
+  #global xml_delim_tokens
+  #global ref_type_tokens
+  global method_types
 
-  def interp_var_assignment(node:dict, nodeID:int, childReturns:list)->None:
+  def interpretVarAssignment(node:dict, node_id:int, child_returns:list)->None:
     """Interprets the assignment of a value to a variable"""
 
-    nodeType = node["nodeType"]
-    nodeRef = node["nodeRef"]
-    nodeName = node["nodeName"]
-    nodeLineNumber = node["nodeLineNumber"]
-    nodeArgs = node["nodeArgs"]
+    node_type = node["nodeType"]
+    node_ref = node["nodeRef"]
+    node_name = node["nodeName"]
+    node_line = node["nodeLineNumber"]
+    node_args = node["nodeArgs"]
 
-    varName = childReturns[0]['varName']
-    varTypes = childReturns[0]['varTypes']
-    operation = childReturns[1]
-    value = childReturns[2]['argValue']
-    valueTypes = childReturns[2]['argTypes']
+    var_name = child_returns[0]['var_name']
+    var_types = child_returns[0]['var_types']
+    operation = child_returns[1]
+    value = child_returns[2]['arg_value']
+    value_types = child_returns[2]['arg_types']
 
-    oldValue = variables[varName]['value']
-    mutable = variables[varName]['mutable']
+    old_value = variables[var_name]['value']
+    mutable = variables[var_name]['mutable']
 
     # is either a variable (mutable) or is a constant that doesn't have a value yet
-    if mutable or (not mutable and oldValue is None):
-      isValidType = False
-      for valueType in valueTypes:
-        if isValidType == True: continue
-        if valueType in varTypes: isValidType = True
+    if mutable or (not mutable and old_value is None):
+      is_valid_type = False
+      for value_type in value_types:
+        if is_valid_type == True: continue
+        if value_type in var_types: is_valid_type = True
 
       if operation == "ASSIGN":
-        if not isValidType:                     # illegal type assignment
-          try: raise neh.nexException(f"Cannot assign a(n) {valueTypes} value to @VAR of type(s) {varTypes}")
-          except neh.nexException as err: neh.nexError(err, True, scriptName, nodeLineNumber)
+        if not is_valid_type:                     # illegal type assignment
+          try: raise neh.NexException(f"Cannot assign a(n) {value_types} value to @VAR of type(s) {var_types}")
+          except neh.NexException as err: neh.nexError(err, True, script_name, node_line)
         else:
-          variables[varName]['value'] = value   # assign new value
+          variables[var_name]['value'] = value   # assign new value
 
     else:
       # no change is made to the value, supply warning to console
-      try: raise neh.nexException(f'Const @{varName.upper()} cannot be reassigned a new value')
-      except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
+      try: raise neh.NexException(f'Const @{var_name.upper()} cannot be reassigned a new value')
+      except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
 
     return(None)
 
 
 
-  def interp_ref_call(node:dict, nodeID:int, childReturns:list)->None:
+  def interpretRefCall(node:dict, node_id:int, child_returns:list)->None:
     """Run a call to a reference, such as var, function, object calls"""
     global content
 
-    refName = childReturns[0]['refName']
-    refParams = childReturns[0]['refParams']
-    refMethods = childReturns[0]['refMethods']
-    nodeLineNumber = node['nodeLineNumber']
+    ref_name = child_returns[0]['ref_name']
+    ref_params = child_returns[0]['ref_params']
+    ref_methods = child_returns[0]['ref_methods']
+    node_line = node['nodeLineNumber']
 
-    refMode = None  # variables? functions? something else?
-    if refName in variables: refMode = 'var_call'
-    else: refMode = 'UNKNOWN_REF_MODE'
+    # how to processing this ref call ... variables? functions? something else?
+    ref_mode = None
+    if ref_name in variables: ref_mode = 'var_call'   # the name of the object called was a variable
+    else: ref_mode = 'UNKNOWN_REF_MODE'
 
 
   # proccess a call to a variable
-    if refMode == 'var_call': 
-      varValue = variables[refName]['value']
-      varTypes = variables[refName]['types']
-      if refMethods:
-        contentVal = interp_ref_methods(varValue, varTypes, refMethods, nodeLineNumber)  # modify the value of 
-      else: contentVal = varValue
-      if contentVal is None: contentVal = ''  # replace None with empty string since None can't concat to string
+    if ref_mode == 'var_call': 
+      var_value = variables[ref_name]['value']
+      var_types = variables[ref_name]['types']
+      if ref_methods:
+        content_value = interpretRefMethods(var_value, var_types, ref_methods, node_line)  # modify the value of 
+      else: content_value = var_value
+      if content_value is None: content_value = ''  # replace None with empty string since None can't concat to string
 
       try:
-        content += contentVal
+        content += content_value
       except:
-        try: raise neh.nexException(f'Could not append "{contentVal}" to server response')
-        except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
+        try: raise neh.NexException(f'Could not append "{content_value}" to server response')
+        except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
 
     else:
-      print(f'interp_ref_call for {refName} could not be completed... {refMode}')
+      print(f'interpretRefCall for {ref_name} could not be completed... {ref_mode}')
 
 
 
-  def interp_ref_methods(value:any, valueTypes:list, methods:dict, nodeLineNumber:int):
+  def interpretRefMethods(value:any, value_types:list, methods:dict, node_line:int):
     """
     modifies a value depending on its type and methods
     BUILT IN METHODS:
@@ -131,84 +132,89 @@ def interpretAST(AST:object, scriptName:str = "Unknown Nexus Module")->str:
     methods for hex:
     methods for utf8:
     """
-    global methodTypes
-    returnVal = value
+    global method_types
+    return_value = value
 
     # process each method independently 
-    for nodeID in methods:  # methods are passed as nodeID's
+    for node_id in methods:  # methods are passed as node_id's
       # get the method name and check its types
-      methodName = methods[nodeID]['nodeName']
-      if not methodName in methodTypes:
-        try: raise neh.nexException(f'The ".{methodName.upper()}()" method doesn\'t exist')
-        except neh.nexException as err: neh.nexError(err, True, scriptName, nodeLineNumber)
-      else: methodTypes = methodTypes[methodName]
+      method_name = methods[node_id]['node_name']
+      if not method_name in method_types:
+        try: raise neh.NexException(f'The ".{method_name.upper()}()" method doesn\'t exist')
+        except neh.NexException as err: neh.nexError(err, True, script_name, node_line)
+      else: method_types = method_types[method_name]
 
       # can this method be applied to this value?
-      isValidType = False 
-      for methodType in methodTypes:
-        if isValidType == True: continue
-        if methodType in valueTypes: isValidType = True
+      is_valid_type = False 
+      for method_type in method_types:
+        if is_valid_type == True: continue
+        if method_type in value_types: is_valid_type = True
 
-      if isValidType:
+      if is_valid_type:
         # the type(s) this method can apply to matches the type(s) of the value... run the method
-        if methodName == 'strip': returnVal = returnVal.strip()
+        if method_name == 'strip': return_value = return_value.strip()
       else:
-        try: raise neh.nexException(f'The ".{methodName.upper()}()" method cannot be applied to value of type(s) {valueTypes}')
-        except neh.nexException as err: neh.nexError(err, True, scriptName, nodeLineNumber)
+        try: raise neh.NexException(f'The ".{method_name.upper()}()" method cannot be applied to value of type(s) {value_types}')
+        except neh.NexException as err: neh.nexError(err, True, script_name, node_line)
 
-    return(returnVal)
+    return(return_value)
 
 
 
-  exprMode = None # tracks what the current expression is (eg, var assignment, reference call, etc)
-  def processNode(node:dict, nodeID:int, childReturns:list)->any:
+  expression_mode = None # tracks what the current expression is (eg, var assignment, reference call, etc)
+  def processNode(node:dict, node_id:int, child_returns:list)->any:
     """Processes the node"""
     global variables
-    nonlocal exprMode
+    nonlocal expression_mode
 
-    nodeType = node["nodeType"]
-    nodeRef = node["nodeRef"]
-    nodeName = node["nodeName"]
-    nodeLineNumber = node["nodeLineNumber"]
-    nodeArgs = node["nodeArgs"]
+    node_type = node["nodeType"]
+    node_ref = node["nodeRef"]
+    node_name = node["nodeName"]
+    node_line = node["nodeLineNumber"]
+    node_args = node["nodeArgs"]
 
-    #print(nodeID, nodeType, nodeRef, nodeName, nodeArgs)
+    #print(node_id, node_type, node_ref, node_name, node_args)
 
-    if nodeType == "ROOT":
+    if node_type == "ROOT":
       """Functionality for root of AST"""
       ...
 
 
 
-    elif nodeType == "EXPR":
+    elif node_type == "EXPR":
       """Functionality for an expression call"""
-      # exprMode was previously assigned... use to determine how to interpret the expression
+      # expression_mode was previously assigned... use to determine how to interpret the expression
 
-      if   exprMode == 'varAssign': interp_var_assignment(node, nodeID, childReturns)
-      elif exprMode == 'refCall': interp_ref_call(node, nodeID, childReturns)
-      exprMode = None # reset after interpreting
+      if   expression_mode == 'varAssign': interpretVarAssignment(node, node_id, child_returns)
+      elif expression_mode == 'refCall': interpretRefCall(node, node_id, child_returns)
+      expression_mode = None # reset after interpreting
       
 
 
-    elif nodeType == "STRLITERAL":
+    elif node_type == "STRLITERAL":
       """
       Functionality for a string literal
       returns a string from concatted child elements
       """
-      strLiteral:str = ''
-      returnVal:dict = {}
+      string_literal:str = ''
+      return_value:dict = {}
 
-      # concat childReturns (arg literals) into string
-      for item in childReturns:
-        strLiteral = f"{strLiteral}{item['argValue']}"
+      # concat child_returns (arg literals) into string
+      for item in child_returns:
+        string_literal = f"{string_literal}{item['arg_value']}"
+        # IS STRING_LITERAL += ITEM['ARG_VALUE'] BETTER??
+        # IS STRING_LITERAL += ITEM['ARG_VALUE'] BETTER??
+        # IS STRING_LITERAL += ITEM['ARG_VALUE'] BETTER??
+        # IS STRING_LITERAL += ITEM['ARG_VALUE'] BETTER??
+        # IS STRING_LITERAL += ITEM['ARG_VALUE'] BETTER??
 
-      # return as nodeArg dict for interp_assignment
-      returnVal = {'argTypes': ['STR'], 'argValue': strLiteral}
-      return(returnVal)
+      # return as nodeArg dict for interpretAssignment
+      return_value = {'arg_types': ['STR'], 'arg_value': string_literal}
+      return(return_value)
 
 
 
-    elif nodeType == "REF":
+    elif node_type == "REF":
       """
       Functionality for an expression
       List of built-in ref-typed expressions:
@@ -218,85 +224,86 @@ def interpretAST(AST:object, scriptName:str = "Unknown Nexus Module")->str:
       tern, if, switch, when, else, const, var
       """
 
-      if nodeRef == "VAR":
+      if node_ref == "VAR":
         """handle variable declaration"""
-        varName = nodeName
-        varTypes = nodeArgs['returnTypes']
+        var_name = node_name
+        var_types = node_args['returnTypes']
         # value appended separately
 
         # previously existed
-        if varName in variables:
-          if variables[varName]['mutable']: # is an existing variable, not a constant
-            for varType in varTypes:
-              if varType not in variables[varName]['types']:
+        if var_name in variables:
+          if variables[var_name]['mutable']: # is an existing variable, not a constant
+            for var_type in var_types:
+              if var_type not in variables[var_name]['types']:
                 # check for type mismatches ... warn if mismatched
-                try: raise neh.nexException(f'Variable reassignment type mismatch for @{varName.upper()} (new: {varType}, old: {variables[varName]['types']})')
-                except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
+                try: raise neh.NexException(f'Variable reassignment type mismatch for @{var_name.upper()} (new: {var_type}, old: {variables[var_name]['types']})')
+                except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
 
             # assign new type(s) and empty value
-            variables[varName]['types'] = varTypes
-            variables[varName]['value'] = None
+            variables[var_name]['types'] = var_types
+            variables[var_name]['value'] = None
 
-          elif not variables[varName]['mutable']: # is an existing constant
-            try: raise neh.nexException(f'Cannot create @{varName.upper()} as a VAR because it is already an existing CONST')
-            except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
+          elif not variables[var_name]['mutable']: # is an existing constant
+            try: raise neh.NexException(f'Cannot create @{var_name.upper()} as a VAR because it is already an existing CONST')
+            except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
 
         # new variable ... create as placeholder
         else: 
-          variables.update({f'{varName}': {'types': varTypes, 'value': None, 'mutable': True}})
+          variables.update({f'{var_name}': {'types': var_types, 'value': None, 'mutable': True}})
         
         # return data to parent node
-        return({'varName': varName, 'varTypes': varTypes})
+        return({'var_name': var_name, 'var_types': var_types})
       
 
-      elif nodeRef == 'CONST':
+      elif node_ref == 'CONST':
         """handle constant declaration"""
-        constName = nodeName
-        constTypes = nodeArgs['returnTypes']
+        const_name = node_name
+        const_types = node_args['returnTypes']
         # value appended separately
 
         # can't change an existing constant
-        if constName in variables:
-          try: raise neh.nexException(f'Const @{constName.upper()} already exists (redeclaration warning)')
-          except neh.nexException as err: neh.nexError(err, False, scriptName, nodeLineNumber)
+        if const_name in variables:
+          try: raise neh.NexException(f'Const @{const_name.upper()} already exists (redeclaration warning)')
+          except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
 
         else:
-          variables.update({f'{constName}': {'types': constTypes, 'value': None, 'mutable': False}})
+          # mutable: False makes this a constant
+          variables.update({f'{const_name}': {'types': const_types, 'value': None, 'mutable': False}})
 
-        return({'varName': constName, 'varTypes': constTypes})  # next item is the assignment
+        return({'var_name': const_name, 'var_types': const_types})  # next item is the assignment
 
       
 
-      elif nodeRef == "ARG":
+      elif node_ref == "ARG":
         """handle calls to variables, functions, objects, etc"""
-        params = nodeArgs['params']
-        if 'methods' in nodeArgs: methods = nodeArgs['methods']
+        params = node_args['params']
+        if 'methods' in node_args: methods = node_args['methods']
         else: methods = {}
-        exprMode = 'refCall'
-        return({'refName':nodeName, 'refParams':params, 'refMethods':methods})
+        expression_mode = 'refCall'
+        return({'ref_name':node_name, 'ref_params':params, 'ref_methods':methods})
 
 
 
-    elif nodeType == "OP":
+    elif node_type == "OP":
       """Funtionality for an operator"""
       # THIS CURRENTLY ASSUMES THE OPERATOR IS AN =
       # in the future, this will handle differently depending on OP type
-      exprMode = 'varAssign'
+      expression_mode = 'varAssign'
       return('ASSIGN')
 
 
 
-    elif nodeType == "ARG":
+    elif node_type == "ARG":
       """
       Functionality for an arg literal
       returns the literal's type and value
       """
-      arg = {'argValue': nodeArgs['value'], 'argTypes': nodeArgs['types']}
+      arg = {'arg_value': node_args['value'], 'arg_types': node_args['types']}
       return(arg)
 
 
 
-    elif nodeType == "METHOD":
+    elif node_type == "METHOD":
       """Functionality for a method"""
       #HYPOTHETHICALLY THIS IS NEVER CALLED...?
       ...
@@ -309,24 +316,24 @@ def interpretAST(AST:object, scriptName:str = "Unknown Nexus Module")->str:
 
     
 
-  def traverseAST(subAST:dict, nodeID:int):
+  def traverseAST(sub_AST:dict, node_id:int):
     """Traverse AST to then interpret each node"""
-    childReturns:list = []
+    child_returns:list = []
 
-    for childNodeID in sorted(subAST["nodeBody"].keys(), key=int):
-      childReturn = traverseAST(subAST["nodeBody"][childNodeID], childNodeID) # get children return value
-      childReturns.append(childReturn)                                        # append to list for parent node to process
+    for child_node_id in sorted(sub_AST["nodeBody"].keys(), key=int):
+      childReturn = traverseAST(sub_AST["nodeBody"][child_node_id], child_node_id)  # get children return value
+      child_returns.append(childReturn)                                             # append to list for parent node to process
 
-    return (processNode(subAST, nodeID, childReturns))
+    return (processNode(sub_AST, node_id, child_returns))
 
 
 
 
 
   # ENTRY POINT
-  print(json.dumps(AST.tree, indent=2))  # USED FOR DEBUGGING
-  nodeID:int = next(iter(AST.tree.keys()))  # get first nodeID (entry point)
-  traverseAST(AST.tree[nodeID], nodeID)     # iterative processor entry point ... use full AST and root nodeID
+  print(json.dumps(obj_AST.tree, indent=2))  # USED FOR DEBUGGING
+  node_id:int = next(iter(obj_AST.tree.keys()))  # get first node_id (entry point)
+  traverseAST(obj_AST.tree[node_id], node_id)     # iterative processor entry point ... use full AST and root node_id
 
   # print interpreter warnings then clear, before exit point
   if len(neh.warnings) != 0:
@@ -336,4 +343,4 @@ def interpretAST(AST:object, scriptName:str = "Unknown Nexus Module")->str:
     neh.warnings.clear()
   
   # EXIT POINT
-  return((content, scriptName)) # CONTENT IS GENERATED, RETURN IT
+  return((content, script_name)) # CONTENT IS GENERATED, RETURN IT

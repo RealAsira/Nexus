@@ -11,10 +11,11 @@ In an effort to keep naming consistent across this project, the following variab
 |Functions  |`camelCase` |`parseTokens(...)`|
 |Methods    |`camelCase` |`popToken(...)`   |
 |Classes    |`PascalCase`|`TokenStack`      |
+|Files      |`PascalCase`|`NexServer.py`    |
 
 ## Notes
 
-- Python typically uses snake case for function names. For the sake of unique-ness and consistency between a variety of languages, camelCase is used for functions instead.
+- Python typically uses snake case for function names. For the sake of unique-ness (between vars vs functions) and consistency between a variety of languages, camelCase is used for functions instead.
 - Functions should come in verb-noun pairs such as `parse` and `tokens` becoming `parseTokens()`.
 - Booleans are prefixed with "is", "has", "can", or similar; for example, `is_active`.
 - Variables should have explicit units when applicable (`delay_seconds`) and are written in all lower case.
