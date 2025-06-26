@@ -1,11 +1,11 @@
-#import nexServerGlobals
+#import NexServerGlobals
 import asyncio
 import datetime
 import os
 import socket
-from nexTokenizer import tokenizeScript
-from nexParser import parseTokens
-from nexInterpreter import interpretAST
+from NexTokenizer import tokenizeScript
+from NexParser import parseTokens
+from NexInterpreter import interpretAST
 
 
 # GLOBAL VARIABLES
@@ -23,9 +23,9 @@ def getConfig()->None:
   """Import server configuration and parse into config list"""
   global config
   try:
-    with open('nexServer.config', 'r') as nexServer_config:
+    with open('NexServer.config', 'r') as server_config:
 
-      for line in nexServer_config:
+      for line in server_config:
         line:str = line.strip()
         if not line or line.startswith('#'): continue
         if '=' in line:
@@ -49,7 +49,7 @@ def getConfig()->None:
             config[setting.strip()] = str(value.strip())
 
   except Exception as err:
-    print('Fatal Error: nexServer.config error ... ' + str(err))
+    print('Fatal Error: NexServer.config error ... ' + str(err))
     os._exit(0)
 
 
@@ -63,20 +63,20 @@ def setupSockets()->None:
 
   # if single host is listened to then convert to list for iteration
   if config['hosts'] == str(config['hosts']):
-    SOCKETHOSTS = [str(config['hosts'])]
+    SOCKET_HOSTS = [str(config['hosts'])]
   else:  
-    SOCKETHOSTS = config['hosts']
+    SOCKET_HOSTS = config['hosts']
 
   # if single port is listened to the convert to list for iteration
   if isinstance(config['ports'], int):
-    SOCKETPORTS = [str(config['ports'])]
+    SOCKET_PORTS = [str(config['ports'])]
   else :
-    SOCKETPORTS = config['ports']
+    SOCKET_PORTS = config['ports']
   
 
   # ATTEMPT SOCKET BIND
-  for host in SOCKETHOSTS:
-    for port in SOCKETPORTS:
+  for host in SOCKET_HOSTS:
+    for port in SOCKET_PORTS:
       # init sockets
       aSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       aSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -108,8 +108,8 @@ def parseRequest(request:str)->None:
   request = str(request)
   lines:str = request.split("\r\n")
   
-  rqstLine:str = lines[0]
-  method, path, protocol = rqstLine.split(' ')
+  request_line:str = lines[0]
+  method, path, protocol = request_line.split(' ')
   request_headers['method'] = method
   request_headers['path'] = path
   request_headers['protocol'] = protocol
@@ -132,32 +132,32 @@ def constructResponse() -> bytes:
   global response_content
 
 
-  # TOKENIZE AND PARSE .NEX FILES ... begin with _onStart.nex
+  # TOKENIZE AND PARSE .NEX FILES ... begin with _OnStart.nex
   # get starting .nex script
   try:
-    scriptPath:str = config['library'] + '/_onStart.nex'
-    with open(scriptPath, "r", encoding="utf-8") as file:
-      _onStartContent = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
+    script_path:str = config['library'] + '/_OnStart.nex'
+    with open(script_path, "r", encoding="utf-8") as file:
+      content_OnStart = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
   except:
-    print(f"Fatal Error: _onStart.nex file doesn't exist in the configured library directory.")
+    print(f"Fatal Error: _OnStart.nex file doesn't exist in the configured library directory.")
 
   # attempt tokenization
   try:
-    tokenizedScript:tuple = tokenizeScript(_onStartContent, '_onStart')
-    tokenStack:object = tokenizedScript[0]
-    scriptName:str = tokenizedScript[1]
+    tokenized_script:tuple = tokenizeScript(content_OnStart, '_OnStart')
+    token_stack:object = tokenized_script[0]
+    script_name:str = tokenized_script[1]
 
     # attempt parse
     try:
-      parsedTokens:tuple = parseTokens(tokenStack, scriptName)
-      AST:object = parsedTokens[0]
-      scriptName:str = parsedTokens[1]
+      parsed_tokens:tuple = parseTokens(token_stack, script_name)
+      obj_AST:object = parsed_tokens[0]
+      script_name:str = parsed_tokens[1]
 
       # attempt interpret
       try:
-        interprettedAST:tuple = interpretAST(AST, scriptName)
-        response_content = interprettedAST[0]
-        scriptName:str = interprettedAST[1]
+        interpretted_AST:tuple = interpretAST(obj_AST, script_name)
+        response_content = interpretted_AST[0]
+        script_name:str = interpretted_AST[1]
       
       except Exception as err:
         print(f"Fatal Error: Could not interpret the AST ... Error: {str(err)}")
@@ -196,65 +196,22 @@ def constructResponse() -> bytes:
 
 
 
-# GET DATA FROM PORT TO BEGIN RESPONSE
-"""
-OLD CODE ONLY WORKS FOR SINGLE SOCKET CONFIGURATION
-if __name__ == "__main__":
-  getConfig()
-  setupSockets()
-
-  print(config, sockets)
-
-  # THIS LOOP ONLY WORKS FOR SINGLE SOCKETS (IE, cannot listen to multiple hosts or ports simultaneously)
-  try:
-    while True:
-      for aSocket in sockets:
-        print(f"Awaiting conn via {aSocket.getsockname}")
-        connection, address = aSocket.accept()
-        print(f"Established conn via {aSocket.getsockname}")
-
-        clientRequest = connection.recv(1024).decode("utf-8")
-
-        if len(clientRequest) > 0:
-          parseRequest(clientRequest)
-          #print('\n\n', request_headers)
-          #print('\n')
-
-          response = constructResponse()
-          #print('\n\n' + str(response))
-
-          try:
-            connection.sendall(response)
-          except Exception as err:
-            print(f"Error transmitting response: {err}")
-          finally:
-            connection.close()
-            print(f"Conn closed {aSocket.getsockname}")
-
-  except Exception as err:
-    print("Error processing request or response: ", err)
-    pass  # continue loop even on error
-"""
-
-
-
-
 async def handleRequest(reader, writer)->None:
   """Handle a client request"""
   request = await reader.read(1024)
-  clientAddr = writer.get_extra_info('peername')
+  client_address = writer.get_extra_info('peername')
 
   # new request has content
   if len(request) > 0:
     parseRequest(request.decode('utf-8'))
-    print(f"\nconn with {clientAddr}: requested {request_headers['path']}")
+    print(f"\nconn with {client_address}: requested {request_headers['path']}")
 
     response = constructResponse()
     writer.write(response)
-    print(f"conn with {clientAddr}: sent response")
+    print(f"conn with {client_address}: sent response")
     await writer.drain()  # ensures actual sending of response
 
-  print(f"conn with {clientAddr}: closed")
+  print(f"conn with {client_address}: closed")
   writer.close()
 
 
