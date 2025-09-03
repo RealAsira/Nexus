@@ -4,19 +4,18 @@ Note: These conventions apply to the Nexus Python Project, not code written in t
 
 In an effort to keep naming consistent across this project, the following variable, constant, function, method, and class naming conventions are used:
 
-| Construct | Convention | Example          |
-|-----------|------------|------------------|
-|Variables  |`snake_case`|`user_first_name` |
-|Constants  |`SNAKE_CASE`|`MAX_RETRIES`     |
-|Functions  |`camelCase` |`parseTokens(...)`|
-|Methods    |`camelCase` |`popToken(...)`   |
-|Classes    |`PascalCase`|`TokenStack`      |
-|Files      |`PascalCase`|`NexServer.py`    |
+| Construct | Convention | Example           |
+|-----------|------------|-------------------|
+|Variables  |`snake_case`|`user_first_name`  |
+|Constants  |`SNAKE_CASE`|`MAX_RETRIES`      |
+|Functions  |`snake_case`|`parse_tokens(...)`|
+|Methods    |`snake_case`|`pop_token(...)`   |
+|Classes    |`PascalCase`|`TokenStack`       |
+|Files      |`PascalCase`|`NexServer.py`     |
 
 ## Notes
 
-- Python typically uses snake case for function names. For the sake of unique-ness (between vars vs functions) and consistency between a variety of languages, camelCase is used for functions instead.
-- Functions should come in verb-noun pairs such as `parse` and `tokens` becoming `parseTokens()`.
+- Functions and methods should come in verb-noun pairs such as `parse` and `tokens` becoming `parse_tokens()`.
 - Booleans are prefixed with "is", "has", "can", or similar; for example, `is_active`.
 - Variables should have explicit units when applicable (`delay_seconds`) and are written in all lower case.
 - Constants are similar to variables but are written in all upper case (`MAX_CONNECTIONS`).
@@ -41,15 +40,15 @@ class Database():
     self.DB_PASSWORD:str = DB_PASSWORD
 
   # method convention
-  def openConnection(self)->None:
+  def open_connection(self)->None:
     """Connect to the database"""
     ...
 
-  def closeConnection(self)->None:
+  def close_connection(self)->None:
     """Disconnect from database"""
     ...
 
-  def runQuery(self, query:str)->object:
+  def run_query(self, query:str)->object:
     """Query the database and return respone as an object"""
     ...
 
@@ -64,7 +63,7 @@ example_database:Database = Database()
 
 
 # function convention
-def getUserData(user_id:int)->object:
+def get_user_data(user_id:int)->object:
   # variable convention
   user_data_query:str = f"""
   SELECT user_id, first_name, last_name
@@ -72,13 +71,13 @@ def getUserData(user_id:int)->object:
   """
 
   # object with method call convention
-  example_database.openConnection()
-  user_data:object = example_database.runQuery(user_data_query)
-  example_database.closeConnection()
+  example_database.open_connection()
+  user_data:object = example_database.run_query(user_data_query)
+  example_database.close_connection()
   return(user_data)
 
 if __name__ == "__main__":
-  user_data:object = getUserData(TEST_USER_ID)
+  user_data:object = get_user_data(TEST_USER_ID)
   print(str(user_data))
 
 ```

@@ -3,9 +3,9 @@ import asyncio
 import datetime
 import os
 import socket
-from NexTokenizer import tokenizeScript
-from NexParser import parseTokens
-from NexInterpreter import interpretAST
+from NexTokenizer import tokenize_script
+from NexParser import parse_tokens
+from NexInterpreter import interpret_AST
 
 
 # GLOBAL VARIABLES
@@ -16,7 +16,7 @@ sockets:list = []            # hosts/ports to bind to
 
 
 
-def getConfig()->None:
+def get_config()->None:
   """Import server configuration and parse into config list"""
   global config
   try:
@@ -53,7 +53,7 @@ def getConfig()->None:
 
 
 
-def setupSockets()->None:
+def setup_sockets()->None:
   """Configure sockets array from hosts/ports in config object"""
   global config
   global sockets
@@ -97,7 +97,7 @@ def setupSockets()->None:
 
 
 
-def parseRequest(request:str)->dict:
+def parse_request(request:str)->dict:
   """Parse client request into usable parts"""
   request_headers = {}
   request = str(request)
@@ -123,7 +123,7 @@ def parseRequest(request:str)->dict:
 
 
 
-def constructResponse() -> bytes:
+def construct_response() -> bytes:
   """Setup initial headers then run response through tokenizer, parser, and interpretter"""
   response_content = {}
 
@@ -133,25 +133,25 @@ def constructResponse() -> bytes:
   try:
     script_path:str = config['library'] + '/_OnStart.nex'
     with open(script_path, "r", encoding="utf-8") as file:
-      content_OnStart = file.read()  #placeholder to ensure everything up to tokenizeScript and parseTokens works
+      content_OnStart = file.read()  #placeholder to ensure everything up to tokenize_script and parse_tokens works
   except:
     print(f"Fatal Error: _OnStart.nex file doesn't exist in the configured library directory.")
 
   # attempt tokenization
   try:
-    tokenized_script:tuple = tokenizeScript(content_OnStart, '_OnStart')
+    tokenized_script:tuple = tokenize_script(content_OnStart, '_OnStart')
     token_stack:object = tokenized_script[0]
     script_name:str = tokenized_script[1]
 
     # attempt parse
     try:
-      parsed_tokens:tuple = parseTokens(token_stack, script_name)
+      parsed_tokens:tuple = parse_tokens(token_stack, script_name)
       obj_AST:object = parsed_tokens[0]
       script_name:str = parsed_tokens[1]
 
       # attempt interpret
       try:
-        interpretted_AST:tuple = interpretAST(obj_AST, script_name)
+        interpretted_AST:tuple = interpret_AST(obj_AST, script_name)
         response_content = interpretted_AST[0]
         script_name:str = interpretted_AST[1]
       
@@ -182,28 +182,28 @@ def constructResponse() -> bytes:
   headers += f"\r\n"
 
   # convert headers and body to bytes
-  headersEncoded = headers.encode('utf-8')
-  contentEncoded = response_content.encode('utf-8')
+  headers_encoded = headers.encode('utf-8')
+  content_encoded = response_content.encode('utf-8')
 
   # send headers and payload as response
-  response = headersEncoded + contentEncoded
+  response = headers_encoded + content_encoded
   return response
 
 
 
 
 
-async def handleRequest(reader, writer)->None:
+async def handle_request(reader, writer)->None:
   """Handle a client request"""
   request = await reader.read(1024)
   client_address = writer.get_extra_info('peername')
 
   # new request has content
   if len(request) > 0:
-    request_headers = parseRequest(request.decode('utf-8'))
+    request_headers = parse_request(request.decode('utf-8'))
     print(f"\nconn with {client_address}: requested {request_headers['path']}")
 
-    response = constructResponse()
+    response = construct_response()
     writer.write(response)
     print(f"conn with {client_address}: sent response")
     await writer.drain()  # ensures actual sending of response
@@ -216,7 +216,7 @@ async def handleRequest(reader, writer)->None:
 
 
 # LISTEN ON EACH SOCKET ASYNC'd
-async def startServer()->None:
+async def start_server()->None:
   """Initialize the server"""
   # async'd server tasks
   tasks:list = []
@@ -227,8 +227,8 @@ async def startServer()->None:
 
     if host != '0.0.0.0' and port != '0':
       try:
-        # coroutine to run upon receiving a request (handleRequest)
-        server = await asyncio.start_server(handleRequest, sock=aSocket)
+        # coroutine to run upon receiving a request (handle_request)
+        server = await asyncio.start_server(handle_request, sock=aSocket)
 
         # add socket to async tasks
         tasks.append(server.serve_forever())
@@ -248,6 +248,6 @@ async def startServer()->None:
 
 # MAIN LOOP
 if __name__ == "__main__":
-  getConfig(); print('\n')
-  setupSockets(); print('\n')
-  asyncio.run(startServer())
+  get_config(); print('\n')
+  setup_sockets(); print('\n')
+  asyncio.run(start_server())
