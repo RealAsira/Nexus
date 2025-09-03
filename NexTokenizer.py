@@ -6,6 +6,7 @@ import NexErrorHandler as neh
 import NexServerGlobals
 all_reserved_tokens = NexServerGlobals.all_reserved_tokens
 expr_type_tokens = NexServerGlobals.expr_type_tokens
+comment_delim_tokens = NexServerGlobals.comment_delim_tokens
 string_delim_tokens = NexServerGlobals.string_delim_tokens
 xml_delim_tokens = NexServerGlobals.xml_delim_tokens
 ref_type_tokens = NexServerGlobals.ref_type_tokens
@@ -47,7 +48,7 @@ class TokenStack:
 
 def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple:
   """Process a script into a token stack"""
-  global all_reserved_tokens, string_delim_tokens, xml_delim_tokens
+  global all_reserved_tokens, string_delim_tokens, xml_delim_tokens, comment_delim_tokens
   #global expr_type_tokens
   #global ref_type_tokens
   #global method_types
@@ -66,7 +67,7 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
   pos:int = 0                     # position where is being processed
 
 
-  def find_next_reserved_singhle_char_token(search_token:str = None) -> int:
+  def find_next_reserved_single_char_token(search_token:str = None) -> int:
     """Returns the position of the next single character reserved token"""
     nonlocal script
     nonlocal pos
@@ -100,7 +101,7 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
     nonlocal script, token_line_number, is_processing_string, processing_string_delim, is_processing_fstring, is_processing_xml
     
     some_token:str = str(script[pos].upper())
-    
+
     # new-line = inc line number
     if some_token == '\n':
       token_line_number += 1
@@ -177,7 +178,7 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
 
     # vanilla string
     elif is_processing_string and not is_processing_fstring:     
-      end_pos:int = find_next_reserved_singhle_char_token(processing_string_delim)
+      end_pos:int = find_next_reserved_single_char_token(processing_string_delim)
       some_token = script[pos:end_pos]
       #print(f"e. Found token {some_token}")
       return some_token
@@ -191,7 +192,7 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
 
     # functional string - tokenize each possible token in it
     elif is_processing_string and is_processing_fstring:
-      end_pos:int = find_next_reserved_singhle_char_token()
+      end_pos:int = find_next_reserved_single_char_token()
       some_token = script[pos:end_pos]
       #print(f"f. Found token {some_token}")
       return some_token
@@ -200,7 +201,7 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
     # multi-character reserved or generic arg...
     # simply find end of this token by getting start of next
     elif not is_processing_string and not is_processing_fstring:
-      end_pos:int = find_next_reserved_singhle_char_token()
+      end_pos:int = find_next_reserved_single_char_token()
       some_token = script[pos:end_pos]
       #print(f"d. Found token {some_token}")
       return some_token
@@ -218,6 +219,7 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
     # full script has been processed
     if pos >= script_length:
       break
+
     
     # new token
     if current_token is None:
@@ -231,6 +233,17 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
         current_token = None
         continue
 
+
+      elif current_token in comment_delim_tokens:
+        print(f"Comment token found: {current_token}")
+        # single line comment
+        if current_token == '#':
+          end_pos:int = find_next_reserved_single_char_token('\n')
+          current_token = script[pos:end_pos]
+          pos += len(current_token)
+          current_token = None
+          continue
+          
 
       # the current_token is a string delimiter
       elif current_token in string_delim_tokens:

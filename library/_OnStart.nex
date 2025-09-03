@@ -1,5 +1,7 @@
 @var num_1:int = 8;
 @var num_2:int = @num1();
 
+# @num_1();
+# @num1();
+
 @num_2();
-# returns 5 to client
