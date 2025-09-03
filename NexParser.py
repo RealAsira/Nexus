@@ -34,25 +34,25 @@ class AbstractSyntaxTree:
 
 
 
-def determineNexusType(value:any)->str:
+def determine_nexus_type(value:any)->str:
   """Returns a string representing the NEXUS type of a value"""
 
   # NEED TO ADD TEST SUPPORT FOR any, blank, null, list, dict, ref, bool, datetime, double, money, base64, binary, hex, utf8
 
-  def isString(value):
+  def is_string(value):
     try: str(value); return True
     except: return False
 
-  def isInt(value):
+  def is_int(value):
     try: int(value); return True
     except: return False
 
-  def isFloat(value):
+  def is_float(value):
     try: float(value); return True
     except: return False
 
-  def isNumber(value):
-    if isInt(value) or isFloat(value): return True
+  def is_number(value):
+    if is_int(value) or is_float(value): return True
     else: return False
 
   value_types = [] # matching types
@@ -61,10 +61,10 @@ def determineNexusType(value:any)->str:
   specific test order
   int, float, number before str because strs can contain numbers
   """
-  if isInt(value): value_types.append('INT')
-  if isFloat(value): value_types.append('FLOAT')
-  if isNumber(value): value_types.append('NUMBER')
-  if isString(value): value_types.append('STR')
+  if is_int(value): value_types.append('INT')
+  if is_float(value): value_types.append('FLOAT')
+  if is_number(value): value_types.append('NUMBER')
+  if is_string(value): value_types.append('STR')
   else: value_types.append(type(value).__name__.upper())
 
   return(value_types)
@@ -79,7 +79,7 @@ def determineNexusType(value:any)->str:
 
 # PARSE TOKENS from tokenizeScript returned object... NEXPARSER ENTRY POINT
 # Returns an Abstract Syntax Tree (AST) as object
-def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tuple:
+def parse_tokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tuple:
   """Initialize the parsing of tokens"""
   #global all_reserved_tokens
   #global expr_type_tokens
@@ -105,7 +105,7 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
   is_righthand_side:bool = False  # lets parser know the right hand side of a statement is being processed
 
 
-  def getNextToken() -> None:
+  def get_next_token() -> None:
     """Clear current_token data and advance to the next token if it exists"""
     nonlocal token_stack, last_token, current_token, token_line_number, token_type, token_value
     nonlocal do_bypass_exprend, is_righthand_side
@@ -120,7 +120,7 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
     # only attempt to process next token if it actually exists
     if len(token_stack.stack) > 0:
       # get next token's data and pop so it isn't reprocessed
-      current_token = token_stack.readCurrentToken()
+      current_token = token_stack.read_current_token()
       token_line_number = current_token[0]
       token_type = current_token[1]
       token_value = current_token[2]
@@ -131,33 +131,33 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
 
 
 
-  def peakNextTokenType()->str:
+  def peak_next_token_type()->str:
     """Peak at the next token type without advancing the stack"""
     if len(token_stack.stack) > 0: return(token_stack.stack[0][1])
     else: return(None)
   
 
 
-  def peakNextTokenValue()->str:
+  def peak_next_token_value()->str:
     """Peak at the next token value without advancing the stack"""
     if len(token_stack.stack) > 0: return(token_stack.stack[0][2])
     else: return(None)
   
 
 
-  def peakLastTokenType()->str:
+  def peak_last_token_type()->str:
     """Peak at the previous token type without altering the stack"""
     return(last_token[1])
   
 
 
-  def peakLastTokenValue()->str:
+  def peak_last_token_value()->str:
     """Peak at the previous token value without altering the stack"""
     return(last_token[2])
 
 
 
-  def getNode() -> dict:
+  def get_node() -> dict:
     """Returns all of the information about a node, by processing up the token_stack starting at the bottom token_stack.stack[0]"""
     nonlocal token_stack, current_token, token_line_number, token_type, token_value
     nonlocal node_id
@@ -172,32 +172,32 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
     node_args:dict = {}      # any args that node needs to function... non-iterative and applies only to this node
     node_body:dict = {}      # child nodes (eg function definition... iterative and can be many layers deep)
 
-    def formattedNode(this_node_id:int=node_id):
+    def format_node(this_node_id:int=node_id):
       """Formats the node into a dictionary"""
       nonlocal node_id, node_type, node_ref, node_name, node_line, node_args, node_body
       return({this_node_id: {"nodeType": node_type, "nodeRef": node_ref, "nodeName": node_name, "nodeLineNumber": node_line, "nodeArgs": node_args, "nodeBody": node_body}})
 
     
 
-    def getTypes()->list:
+    def get_types()->list:
       """Gets all the immediately following type declarations for vars, consts, functions, etc"""
       type_list:list = []
 
       # check that next token is of type EXPRTYPE (:)
-      if not peakNextTokenType() == "EXPRTYPE":
+      if not peak_next_token_type() == "EXPRTYPE":
         try: raise neh.NexException(f'Expecting TYPE-INDICATOR (:) but found {token_value}({token_type})')
         except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
       else:
-        getNextToken()  # eat EXPRTYPE (:)
+        get_next_token()  # eat EXPRTYPE (:)
       
       # TYPE-INDICATOR was found, meaning the loop for finding types can be initiated
       while True:    
-        getNextToken()  # the exprType token doesn't contain the type itself, so skip it
+        get_next_token()  # the exprType token doesn't contain the type itself, so skip it
 
         if token_type == "TYPE":
           type_list.append(token_value)
-          if peakNextTokenType() in ["EXPRTYPE", "TYPE"]:
-            getNextToken()
+          if peak_next_token_type() in ["EXPRTYPE", "TYPE"]:
+            get_next_token()
           else:
             break # exit once the next token isn't related to types
           
@@ -209,27 +209,27 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
     
 
 
-    def getParams()->dict:
+    def get_params()->dict:
       """Gets all params/args for an expression declaration or call"""
       params:dict = {}
       
-      do_process_tokens = True if peakNextTokenType() == "PARENOPN" else False  # should tokens be processed?
+      do_process_tokens = True if peak_next_token_type() == "PARENOPN" else False  # should tokens be processed?
       if do_process_tokens:
-        getNextToken()  # eat parenopn so it isn't added to
+        get_next_token()  # eat parenopn so it isn't added to
         while True:
-          if peakNextTokenType() == "PARENCLS":
-            getNextToken()  # eat parencls so it isn't added to AST
+          if peak_next_token_type() == "PARENCLS":
+            get_next_token()  # eat parencls so it isn't added to AST
             break
           else:
-            params.update(getNode()) # add this node as a param
+            params.update(get_node()) # add this node as a param
 
       return(params)
        
 
 
     # get the next token to process into the node
-    if peakNextTokenType() != None:
-      getNextToken()
+    if peak_next_token_type() != None:
+      get_next_token()
     else: token_type = None
 
     # since there are no more tokens, this node needs to be returned empty
@@ -241,7 +241,7 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
       node_line = None
       node_args = None
       node_body = None
-      return(formattedNode())
+      return(format_node())
 
 
     # start of script
@@ -255,10 +255,10 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
     
       # start getting child nodes and appending them to body using [dict].update(...)
       while len(token_stack.stack) > 0:
-        if peakNextTokenType() == "SCPTEND":
-          getNextToken() # eat scptend so it isn't added
+        if peak_next_token_type() == "SCPTEND":
+          get_next_token() # eat scptend so it isn't added
           break
-        else: node_body.update(getNode())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
+        else: node_body.update(get_node())  # scptstrt is root of AST ... body is all other nodes as children ... this is iterative
 
 
     # end of script shouldn't be stored
@@ -283,14 +283,14 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
       node_line = token_line_number
       node_args = {}
 
-      if peakLastTokenType() == 'OP': is_righthand_side = True  # now handling the right hand side of an assignment
+      if peak_last_token_type() == 'OP': is_righthand_side = True  # now handling the right hand side of an assignment
 
       # all following nodes are children until this expression ends
       while True:
-        if peakNextTokenType() == "EXPREND":
-          getNextToken()  # eat exprend so it isn't stored as child node
+        if peak_next_token_type() == "EXPREND":
+          get_next_token()  # eat exprend so it isn't stored as child node
           break
-        else: node_body.update(getNode())
+        else: node_body.update(get_node())
     
 
     # EXPREND isn't stored expressions with nested elements, but it IS stored to separate same-nodal-level elements
@@ -314,10 +314,10 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
 
       # all following nodes are children until this string ends
       while True:
-        if peakNextTokenType() == "STREND":
-          getNextToken() # eat strend so it isn't stored
+        if peak_next_token_type() == "STREND":
+          get_next_token() # eat strend so it isn't stored
           break
-        else: node_body.update(getNode())
+        else: node_body.update(get_node())
     
 
     # end of string shouldn't be returned
@@ -384,12 +384,12 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
           node_name = token_value
           node_line = token_line_number
           node_args = {}
-          node_args.update({"params":getParams()})
+          node_args.update({"params":get_params()})
           node_body = {}
 
           while True:
-            if peakNextTokenType() != "METHOD": break
-            else: node_args.update({"methods":getNode()})
+            if peak_next_token_type() != "METHOD": break
+            else: node_args.update({"methods":get_node()})
 
 
         #case "MIN":
@@ -434,25 +434,25 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
           node_body = {}
 
           # next token type must be arg [node_name]
-          if peakNextTokenType() == "ARG":
-            getNextToken()
+          if peak_next_token_type() == "ARG":
+            get_next_token()
             node_name = token_value
           else:
             try: raise neh.NexException("@DEF requires NAME")
             except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
           
           # get parameters for function definition then return type(s)
-          node_args.update({"params":getParams()})
-          node_args.update({"returnTypes":getTypes()})
+          node_args.update({"params":get_params()})
+          node_args.update({"returnTypes":get_types()})
 
           # get definition (required)
-          if peakNextTokenType() == "BRACEOPN":
-            getNextToken()  # eat braceopn { so it isn't added to AST
+          if peak_next_token_type() == "BRACEOPN":
+            get_next_token()  # eat braceopn { so it isn't added to AST
             while True:
-              if peakNextTokenType() == "BRACECLS":
-                getNextToken() # eat bracecls } so it isn't added to AST
+              if peak_next_token_type() == "BRACECLS":
+                get_next_token() # eat bracecls } so it isn't added to AST
                 break
-              else: node_body.update(getNode())
+              else: node_body.update(get_node())
           
 
         #case "GETGLOBAL":
@@ -472,7 +472,7 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
           node_name = token_value
           node_line = token_line_number
           node_args = {}
-          node_args.update({"params":getParams()})
+          node_args.update({"params":get_params()})
           node_body = {}
 
 
@@ -487,7 +487,7 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
           node_name = token_value
           node_line = token_line_number
           node_args = {}
-          node_args.update({"params":getParams()})
+          node_args.update({"params":get_params()})
           node_body = {}
 
 
@@ -535,16 +535,16 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
           node_body = {}
          
           # next token must be arg [node_name]
-          if peakNextTokenType() == "ARG":
-            getNextToken()
+          if peak_next_token_type() == "ARG":
+            get_next_token()
             node_name = token_value
           else:
             try: raise neh.NexException(f"@CONST requires NAME")
             except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
           
-          # const expression does not require getParams()
+          # const expression does not require get_params()
           # next part of syntax is always :[TYPE] (exactly one, not "any"-type)
-          node_args.update({"returnTypes":getTypes()})
+          node_args.update({"returnTypes":get_types()})
 
           # exactly one type
           if len(node_args['returnTypes']) > 1 or len(node_args['returnTypes']) == 0:
@@ -557,11 +557,11 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
             except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
           
           # must have a value assigned immediately
-          if peakNextTokenValue() != "=": # using nextTokenValue since there are many types of OP token_types but only one is allowed
+          if peak_next_token_value() != "=": # using nextTokenValue since there are many types of OP token_types but only one is allowed
             try: raise neh.NexException(f"@CONST requires ASSIGNMENT (=)")
             except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
           
-          if peakNextTokenValue() == "=":
+          if peak_next_token_value() == "=":
             do_bypass_exprend = True  # bypass the EXPREND auto-insert if it is missing (in this case, it should be missing since an OP is found)
 
 
@@ -580,22 +580,22 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
           node_body = {}
          
           # next token must be arg [node_name]
-          if peakNextTokenType() == "ARG":
-            getNextToken()
+          if peak_next_token_type() == "ARG":
+            get_next_token()
             node_name = token_value
           else:
             try: raise neh.NexException(f"@VAR requires NAME")
             except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
           
-          # var expression does not require getParams()               
+          # var expression does not require get_params()               
           # next part of syntax is always :[TYPE] ... or multiple types (the types the variable can be, ie returnTypes)
-          node_args.update({"returnTypes":getTypes()})
+          node_args.update({"returnTypes":get_types()})
           
-          if peakNextTokenType() not in ["OP", "EXPREND"]:
+          if peak_next_token_type() not in ["OP", "EXPREND"]:
             try: raise neh.NexException(f"@VAR expecting ASSIGNMENT (=) or EXPRESSION END (;)")
             except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
           
-          if peakNextTokenValue() == "=":
+          if peak_next_token_value() == "=":
             do_bypass_exprend = True  # bypass the EXPREND auto-insert if it is missing (in this case, it should be missing since an OP is found)
 
 
@@ -612,7 +612,7 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
       
       # at this point an end of expression is always expected ... if expression end is missing, add it
       # exception to this rule is vars and consts, which may be assigned a value before expr end
-      if peakNextTokenType() != "EXPREND" and not do_bypass_exprend:
+      if peak_next_token_type() != "EXPREND" and not do_bypass_exprend:
         token_stack.insert(token_line_number, "EXPREND", ";", 0)
 
         
@@ -758,22 +758,22 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
     # for generic arg-typed tokens
     elif token_type == "ARG":
       # this is a user defined function, object, or variable call
-      if peakLastTokenType() == "EXPRSTRT":
+      if peak_last_token_type() == "EXPRSTRT":
         this_node_id = node_id
         node_type = "REF"
         node_ref = "ARG"
         node_name = token_value
         node_line = token_line_number
-        node_args.update({"params":getParams()})
+        node_args.update({"params":get_params()})
         node_body = {} # empty or attached methods
 
         # get attached methods
         while True:
-          if peakNextTokenType() != "METHOD": break
-          else: node_args.update({"methods":getNode()})
+          if peak_next_token_type() != "METHOD": break
+          else: node_args.update({"methods":get_node()})
 
         # end of methods implies end of expression ... if expression end is missing, add it
-        if peakNextTokenType() != "EXPREND":
+        if peak_next_token_type() != "EXPREND":
           token_stack.insert(token_line_number, "EXPREND", ";", 0)
 
         # this node is a user defined ref-call that is on the right-side of an expression ... therefore it MUST have an implied end
@@ -783,7 +783,7 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
 
 
       # this is a definition parameter
-      elif peakNextTokenType() == "EXPRTYPE":
+      elif peak_next_token_type() == "EXPRTYPE":
         node_type = token_type
         node_ref = token_value
         node_name = "PARAM"
@@ -792,21 +792,21 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
         node_body = {}
         
         # get allowed types for this param
-        node_args.update({"returnTypes":getTypes()})
+        node_args.update({"returnTypes":get_types()})
 
         # assign default value, delimit, or see end of params.
-        if peakNextTokenType() not in ["OP", "EXPRDLM", 'PARENCLS']:
+        if peak_next_token_type() not in ["OP", "EXPRDLM", 'PARENCLS']:
           try: raise neh.NexException(f"PARAMETER expecting ASSIGNMENT (=) or DELIM (,)")
           except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
 
         
       # generic arg (such as literals, strings, etc)
-      elif peakLastTokenType() != "EXPRSTRT":  
+      elif peak_last_token_type() != "EXPRSTRT":  
         node_type = "ARG"
         node_ref = "ARG"
         node_name = "LITERAL"
         node_line = token_line_number
-        node_args.update({"types":determineNexusType(token_value), "value":token_value})
+        node_args.update({"types":determine_nexus_type(token_value), "value":token_value})
         node_body = {} # this will always be empty for generic args as they never have bodies/children
 
 
@@ -821,15 +821,15 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
       node_body = {}
 
       # next token must be arg [node_name]
-      if peakNextTokenType() == "ARG":
-        getNextToken()
+      if peak_next_token_type() == "ARG":
+        get_next_token()
         node_name = token_value
       else:
         try: raise neh.NexException(f"METHOD requires NAME")
         except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
       
       # next token must be args (even if none/null/blank are supplied)
-      node_args.update({"params":getParams()})
+      node_args.update({"params":get_params()})
       
 
     # catch-all for missing items
@@ -846,16 +846,16 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tu
 
     # RUNS AFTER THE IF/ELSE STATEMENT FOR PARSING NODES BASED ON TOKEN TYPES
     this_node_id = node_id if this_node_id is None else this_node_id   # is node_id unless a value is assigned
-    return(formattedNode(this_node_id))
+    return(format_node(this_node_id))
       
 
 
   # initialize the building of the node tree
-  #if current_node is None: current_node = getNode()
+  #if current_node is None: current_node = get_node()
 
   # continue looping until end of token stack 
   while len(token_stack.stack) > 0:
-    current_node = getNode()   # get the next node
+    current_node = get_node()   # get the next node
     obj_AST.update(current_node)   # put into tree
     current_node = None        # reset for next node
 

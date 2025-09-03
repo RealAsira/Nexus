@@ -31,7 +31,7 @@ class TokenStack:
     """Remove a token from the bottom of the stack"""
     self.stack.pop(pos)
   
-  def readCurrentToken(self):
+  def read_current_token(self):
     """Return the bottom token from the stack, doesn't remove"""
     return self.stack[0]
   
@@ -39,19 +39,19 @@ class TokenStack:
     """Clears the entire token stack"""
     # the TokenStack is reused and needs to be cleared between uses
     self.stack.clear()
-  
-default_stack = TokenStack()
-  
+   
 
 
 
 
-def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_stack:object=default_stack)->tuple:
+def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple:
   """Process a script into a token stack"""
   global all_reserved_tokens, string_delim_tokens, xml_delim_tokens
   #global expr_type_tokens
   #global ref_type_tokens
   #global method_types
+
+  token_stack = TokenStack()
 
   current_token:str = None
   token_line_number:int = 1           # file line number for where token is at
@@ -64,7 +64,7 @@ def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_s
   pos:int = 0                     # position where is being processed
 
 
-  def findNextReservedSingleCharToken(search_token:str = None) -> int:
+  def find_next_reserved_singhle_char_token(search_token:str = None) -> int:
     """Returns the position of the next single character reserved token"""
     nonlocal script
     nonlocal pos
@@ -93,7 +93,7 @@ def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_s
 
 
 
-  def getToken() -> str:
+  def get_token() -> str:
     """Finds and returns the next token"""
     nonlocal script, token_line_number, is_processing_string, processing_string_delim, is_processing_fstring, is_processing_xml
     
@@ -175,7 +175,7 @@ def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_s
 
     # vanilla string
     elif is_processing_string and not is_processing_fstring:     
-      end_pos:int = findNextReservedSingleCharToken(processing_string_delim)
+      end_pos:int = find_next_reserved_singhle_char_token(processing_string_delim)
       some_token = script[pos:end_pos]
       #print(f"e. Found token {some_token}")
       return some_token
@@ -189,7 +189,7 @@ def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_s
 
     # functional string - tokenize each possible token in it
     elif is_processing_string and is_processing_fstring:
-      end_pos:int = findNextReservedSingleCharToken()
+      end_pos:int = find_next_reserved_singhle_char_token()
       some_token = script[pos:end_pos]
       #print(f"f. Found token {some_token}")
       return some_token
@@ -198,7 +198,7 @@ def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_s
     # multi-character reserved or generic arg...
     # simply find end of this token by getting start of next
     elif not is_processing_string and not is_processing_fstring:
-      end_pos:int = findNextReservedSingleCharToken()
+      end_pos:int = find_next_reserved_singhle_char_token()
       some_token = script[pos:end_pos]
       #print(f"d. Found token {some_token}")
       return some_token
@@ -219,7 +219,7 @@ def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_s
     
     # new token
     if current_token is None:
-      current_token = getToken() # now that the token is found, the next step will store it
+      current_token = get_token() # now that the token is found, the next step will store it
       #print(f"New token found: {current_token}")
       #print(current_token, all_reserved_tokens[current_token.upper()])
 
@@ -232,7 +232,7 @@ def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_s
 
       # the current_token is a string delimiter
       elif current_token in string_delim_tokens:
-        # is_processing_string is toggled in getToken. If true, then a str just started..
+        # is_processing_string is toggled in get_token. If true, then a str just started..
         if is_processing_string:
           is_escaped:bool = True if script[pos-1] == '\\' else False
 

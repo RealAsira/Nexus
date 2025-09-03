@@ -18,7 +18,7 @@ method_types = NexServerGlobals.method_types
 
 
 
-def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tuple:
+def interpret_AST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tuple:
   """USES AST TO GENERATE AN OUTPUT"""
   #global all_reserved_tokens
   #global expr_type_tokens
@@ -30,7 +30,7 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
   variables:dict = {} # a list of references and values
   content:str = '' # CONTENT INTERPRETED!!
 
-  def interpretVarAssignment(node:dict, node_id:int, child_returns:list)->None:
+  def interpret_var_assignment(node:dict, node_id:int, child_returns:list)->None:
     """Interprets the assignment of a value to a variable"""
 
     node_type = node["nodeType"]
@@ -71,7 +71,7 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
 
 
 
-  def interpretRefCall(node:dict, node_id:int, child_returns:list)->None:
+  def interpret_ref_call(node:dict, node_id:int, child_returns:list)->None:
     """Run a call to a reference, such as var, function, object calls"""
     nonlocal content
 
@@ -91,7 +91,7 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
       var_value = variables[ref_name]['value']
       var_types = variables[ref_name]['types']
       if ref_methods:
-        content_value = interpretRefMethods(var_value, var_types, ref_methods, node_line)  # modify the value of 
+        content_value = interpret_ref_methods(var_value, var_types, ref_methods, node_line)  # modify the value of 
       else: content_value = var_value
       if content_value is None: content_value = ''  # replace None with empty string since None can't concat to string
 
@@ -102,11 +102,11 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
         except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
 
     else:
-      print(f'interpretRefCall for {ref_name} could not be completed... {ref_mode}')
+      print(f'interpret_ref_call for {ref_name} could not be completed... {ref_mode}')
 
 
 
-  def interpretRefMethods(value:any, value_types:list, methods:dict, node_line:int):
+  def interpret_ref_methods(value:any, value_types:list, methods:dict, node_line:int):
     """
     modifies a value depending on its type and methods
     BUILT IN METHODS:
@@ -162,7 +162,7 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
 
 
   expression_mode = None # tracks what the current expression is (eg, var assignment, reference call, etc)
-  def processNode(node:dict, node_id:int, child_returns:list)->any:
+  def process_node(node:dict, node_id:int, child_returns:list)->any:
     """Processes the node"""
     nonlocal variables
     nonlocal expression_mode
@@ -185,8 +185,8 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
       """Functionality for an expression call"""
       # expression_mode was previously assigned... use to determine how to interpret the expression
 
-      if   expression_mode == 'varAssign': interpretVarAssignment(node, node_id, child_returns)
-      elif expression_mode == 'refCall': interpretRefCall(node, node_id, child_returns)
+      if   expression_mode == 'varAssign': interpret_var_assignment(node, node_id, child_returns)
+      elif expression_mode == 'refCall': interpret_ref_call(node, node_id, child_returns)
       expression_mode = None # reset after interpreting
       
 
@@ -316,15 +316,15 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
 
     
 
-  def traverseAST(sub_AST:dict, node_id:int):
+  def traverse_AST(sub_AST:dict, node_id:int):
     """Traverse AST to then interpret each node"""
     child_returns:list = []
 
     for child_node_id in sorted(sub_AST["nodeBody"].keys(), key=int):
-      childReturn = traverseAST(sub_AST["nodeBody"][child_node_id], child_node_id)  # get children return value
+      childReturn = traverse_AST(sub_AST["nodeBody"][child_node_id], child_node_id)  # get children return value
       child_returns.append(childReturn)                                             # append to list for parent node to process
 
-    return (processNode(sub_AST, node_id, child_returns))
+    return (process_node(sub_AST, node_id, child_returns))
 
 
 
@@ -333,7 +333,7 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tupl
   # ENTRY POINT
   print(json.dumps(obj_AST.tree, indent=2))  # USED FOR DEBUGGING
   node_id:int = next(iter(obj_AST.tree.keys()))  # get first node_id (entry point)
-  traverseAST(obj_AST.tree[node_id], node_id)     # iterative processor entry point ... use full AST and root node_id
+  traverse_AST(obj_AST.tree[node_id], node_id)     # iterative processor entry point ... use full AST and root node_id
 
   # print interpreter warnings then clear, before exit point
   if len(neh.warnings) != 0:

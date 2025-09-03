@@ -4,18 +4,18 @@ Note: These conventions apply to code written in the Nexus language, not the Nex
 
 In an effort to keep naming consistent across Nexus code, the following variable, constant, function, method, and class naming conventions are used:
 
-| Construct | Convention | Example          |
-|-----------|------------|------------------|
-|Variables  |`snake_case`|`user_first_name` |
-|Constants  |`SNAKE_CASE`|`MAX_RETRIES`     |
-|Functions  |`camelCase` |`parseTokens(...)`|
-|Methods    |`camelCase` |`popToken(...)`   |
-|Classes    |`PascalCase`|`TokenStack()`    |
-|Files      |`PascalCase`|`_OnStart.nex`    |
+| Construct | Convention | Example           |
+|-----------|------------|-------------------|
+|Variables  |`snake_case`|`user_first_name`  |
+|Constants  |`SNAKE_CASE`|`MAX_RETRIES`      |
+|Functions  |`snake_case`|`parse_tokens(...)`|
+|Methods    |`snake_case`|`pop_token(...)`   |
+|Classes    |`PascalCase`|`TokenStack()`     |
+|Files      |`PascalCase`|`_OnStart.nex`     |
 
 ## Notes
 
-- Functions should come in verb-noun pairs such as `parse` and `tokens` becoming `parseTokens([params])`.
+- Functions should come in verb-noun pairs such as `parse` and `tokens` becoming `parse_tokens([params])`.
 - Booleans are prefixed with "is", "has", "can", or similar; for example, `is_active`.
 - Variables should have explicit units when applicable (`delay_seconds`) and are written in all lower case.
 - Constants are similar to variables but are written in all upper case (`MAX_CONNECTIONS`).
@@ -32,11 +32,12 @@ In an effort to keep naming consistent across Nexus code, the following variable
 
 In order to illustrate the above conventions, the following example code will be used. The code establishes a class with an initialization and one method. An instance (object) typed to that class is created. A function is defined that returns the method from the object instance and returns data. That data is printed.
 
-#### WARNING! THE LANGUAGE IS STILL IN DEVELOPMENT SO THESE CONVENTIONS AND THIS SPECIFIC EXAMPLE ARE BOTH EXTREMELY LIKELY TO CHANGE AND BE UPDATED OVER TIME.
+### WARNING! THE LANGUAGE IS STILL IN DEVELOPMENT SO THESE CONVENTIONS AND THIS SPECIFIC EXAMPLE ARE BOTH EXTREMELY LIKELY TO CHANGE AND BE UPDATED OVER TIME
 
 Here is the more detail example of what the code might look like:
 
-```Python
+<!-- C# used as the code block "language" as Nexus syntax highlighting doesn't exist yet ... C# happened to work well enough -->
+```C#
 # class convention
 @class User {
   # method convention
@@ -65,12 +66,12 @@ Here is the more detail example of what the code might look like:
 
 
 # function convention
-@def establishUser(user_id:int):json {
+@def establish_user(user_id:int):json {
   @user_data:json = @user.lookup_user(@user_id());
   @return(@user_data());
 }
 
 
-@print(@establishUser(@USER_ID()));
+@print(@establish_user(@USER_ID()));
 
 ```
