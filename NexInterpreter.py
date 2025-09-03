@@ -13,6 +13,7 @@ string_delim_tokens = NexServerGlobals.string_delim_tokens
 xml_delim_tokens = NexServerGlobals.xml_delim_tokens
 ref_type_tokens = NexServerGlobals.ref_type_tokens
 method_types = NexServerGlobals.method_types
+config = NexServerGlobals.config
 
 
 
@@ -26,6 +27,7 @@ def interpret_AST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tup
   #global xml_delim_tokens
   #global ref_type_tokens
   global method_types
+  global config
 
   variables:dict = {} # a list of references and values
   content:str = '' # CONTENT INTERPRETED!!
@@ -83,6 +85,7 @@ def interpret_AST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tup
     # how to processing this ref call ... variables? functions? something else?
     ref_mode = None
     if ref_name in variables: ref_mode = 'var_call'   # the name of the object called was a variable
+    #if ref_name in functions: ref_mode = 'func_call'  # the name of the object called was a function
     else: ref_mode = 'UNKNOWN_REF_MODE'
 
 
@@ -101,8 +104,20 @@ def interpret_AST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tup
         try: raise neh.NexException(f'Could not append "{content_value}" to server response')
         except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
 
+    elif ref_mode == "func_call":
+      print("FUNC_CALL REF_MODE NOT IMPLEMENTED YET")
+
+    elif ref_mode == "UNKNOWN_REF_MODE":
+      print(config['print_unknown_ref'])
+      if config['print_unknown_ref'] == True:
+        content += f"[UNKNOWN_REF {{{ref_name}}}]"
+        print(f'WARNING: interpret_ref_call for {ref_name} could not be completed due to unidentified reference mode: {ref_mode} ... appened [UNKNOWN_REF {{{ref_name}}}] instead of expected return value.')
+      else: 
+        content += f"[UNKNOWN_REF]"
+        print(f'WARNING: interpret_ref_call for {ref_name} could not be completed due to unidentified reference mode: {ref_mode} ... appened [UNKNOWN_REF] instead of expected return value.')
+
     else:
-      print(f'interpret_ref_call for {ref_name} could not be completed... {ref_mode}')
+      print(f'interpret_ref_call for {ref_name} could not be completed due to no assignment of reference mode.')
 
 
 
@@ -183,7 +198,7 @@ def interpret_AST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tup
 
     elif node_type == "EXPR":
       """Functionality for an expression call"""
-      # expression_mode was previously assigned... use to determine how to interpret the expression
+      # expression_mode was previously assigned ... use to determine how to interpret the expression
 
       if   expression_mode == 'varAssign': interpret_var_assignment(node, node_id, child_returns)
       elif expression_mode == 'refCall': interpret_ref_call(node, node_id, child_returns)

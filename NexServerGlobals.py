@@ -1,3 +1,4 @@
+config:dict = {} # placeholder for nexus server configuration options
 
 # ALL reserved symbols and keywords in the language
 all_reserved_tokens:dict = {

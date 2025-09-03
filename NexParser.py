@@ -12,6 +12,7 @@ string_delim_tokens = NexServerGlobals.string_delim_tokens
 xml_delim_tokens = NexServerGlobals.xml_delim_tokens
 ref_type_tokens = NexServerGlobals.ref_type_tokens
 method_types = NexServerGlobals.method_types
+config = NexServerGlobals.config
 
 
 
@@ -87,6 +88,7 @@ def parse_tokens(token_stack:object, script_name:str = "Uknown Nexus Module")->t
   #global xml_delim_tokens
   #global ref_type_tokens
   #global method_types
+  #global config
 
   obj_AST = AbstractSyntaxTree()
   obj_AST.clear()
@@ -185,7 +187,7 @@ def parse_tokens(token_stack:object, script_name:str = "Uknown Nexus Module")->t
 
       # check that next token is of type EXPRTYPE (:)
       if not peak_next_token_type() == "EXPRTYPE":
-        try: raise neh.NexException(f'Expecting TYPE-INDICATOR (:) but found {token_value}({token_type})')
+        try: raise neh.NexException(f'Expecting TYPE-INDICATOR (:) but found {peak_next_token_value()}({peak_next_token_type()})')
         except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
       else:
         get_next_token()  # eat EXPRTYPE (:)
@@ -203,7 +205,8 @@ def parse_tokens(token_stack:object, script_name:str = "Uknown Nexus Module")->t
           
         else: 
           try: raise neh.NexException(f'{token_value}({token_type}) is not a valid type')
-          except neh.NexException as err: neh.nexError(err, True, script_name, token_line_number)
+          except neh.NexException as err: neh.nexError(err, False, script_name, node_line)
+          break
         
       return(type_list)
     
