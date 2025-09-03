@@ -30,8 +30,6 @@ class AbstractSyntaxTree:
     """Clears entire AST"""
     self.tree.clear()
 
-obj_AST = AbstractSyntaxTree()
-
 
 
 
@@ -81,7 +79,7 @@ def determineNexusType(value:any)->str:
 
 # PARSE TOKENS from tokenizeScript returned object... NEXPARSER ENTRY POINT
 # Returns an Abstract Syntax Tree (AST) as object
-def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->object:
+def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->tuple:
   """Initialize the parsing of tokens"""
   #global all_reserved_tokens
   #global expr_type_tokens
@@ -89,6 +87,9 @@ def parseTokens(token_stack:object, script_name:str = "Uknown Nexus Module")->ob
   #global xml_delim_tokens
   #global ref_type_tokens
   #global method_types
+
+  obj_AST = AbstractSyntaxTree()
+  obj_AST.clear()
 
   current_node:dict = {}       # temp container for current node to be stored
   node_id:int = 0              # unique id for each node

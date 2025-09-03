@@ -9,9 +9,6 @@ from NexInterpreter import interpretAST
 
 
 # GLOBAL VARIABLES
-request_headers:dict = {}    # client's request headers
-response_headers:dict = {}   # server's response headers
-response_content = None      # content returned by server
 config:dict = {}             # nexus server configuration options
 sockets:list = []            # hosts/ports to bind to
 
@@ -100,11 +97,9 @@ def setupSockets()->None:
 
 
 
-def parseRequest(request:str)->None:
+def parseRequest(request:str)->dict:
   """Parse client request into usable parts"""
-  global request_headers
   request_headers = {}
-
   request = str(request)
   lines:str = request.split("\r\n")
   
@@ -121,6 +116,8 @@ def parseRequest(request:str)->None:
 
     key, value = line.split(":", 1)
     request_headers[key.strip()] = value.strip()
+  
+  return request_headers
 
 
 
@@ -128,8 +125,7 @@ def parseRequest(request:str)->None:
 
 def constructResponse() -> bytes:
   """Setup initial headers then run response through tokenizer, parser, and interpretter"""
-  global response_headers
-  global response_content
+  response_content = {}
 
 
   # TOKENIZE AND PARSE .NEX FILES ... begin with _OnStart.nex
@@ -167,6 +163,7 @@ def constructResponse() -> bytes:
     print(f"Fatal Error: Could not tokenize script ... Error: {str(err)}")
   
   # set default headers
+  response_headers = {}
   response_headers.setdefault('statusCode', 200)
   response_headers.setdefault('statusMessage', 'OK')
   response_headers.setdefault('contentType', 'text/html; charset="UTF-8"')
@@ -203,7 +200,7 @@ async def handleRequest(reader, writer)->None:
 
   # new request has content
   if len(request) > 0:
-    parseRequest(request.decode('utf-8'))
+    request_headers = parseRequest(request.decode('utf-8'))
     print(f"\nconn with {client_address}: requested {request_headers['path']}")
 
     response = constructResponse()
