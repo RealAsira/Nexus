@@ -6,10 +6,10 @@ import socket
 from NexTokenizer import tokenize_script
 from NexParser import parse_tokens
 from NexInterpreter import interpret_AST
-
+import NexServerGlobals
 
 # GLOBAL VARIABLES
-config:dict = {}             # nexus server configuration options
+config:dict = NexServerGlobals.config # nexus server configuration options
 sockets:list = []            # hosts/ports to bind to
 
 
@@ -20,18 +20,19 @@ def get_config()->None:
   """Import server configuration and parse into config list"""
   global config
   try:
-    with open('NexServer.config', 'r') as server_config:
+    with open('NexServer.conf', 'r') as server_config:
 
       for line in server_config:
         line:str = line.strip()
-        if not line or line.startswith('#'): continue
+        # skip blank lines, section headers, and comments
+        if not line or line.startswith('#') or line.startswith('['): continue
         if '=' in line:
           setting, value = line.split('=', 1)
           value = value.strip()
 
           # if value is a boolen
           if value.upper() in ['TRUE', 'FALSE']:
-            config[setting.strip()] = bool(value)
+            config[setting.strip()] = value.upper() == 'TRUE'
 
           # if value is a digit
           elif value.isdigit():
@@ -44,9 +45,12 @@ def get_config()->None:
           # if value is a string
           else:
             config[setting.strip()] = str(value.strip())
+        
+        else:
+          print("Warning: NexServer.conf line is not a valid setting: " + line)
 
   except Exception as err:
-    print('Fatal Error: NexServer.config error ... ' + str(err))
+    print('Fatal Error: NexServer.conf error: ' + str(err))
     os._exit(0)
 
 
@@ -91,7 +95,7 @@ def setup_sockets()->None:
         aSocket.listen(int(config['max_connections']))  # max connections allowed (per socket)
         print(f"Configured socket binding for {host}:{str(port)}")
       except Exception as err:
-        print(f"Couldn't configure socket binding for {host}:{str(port)} ... {str(err)}")
+        print(f"Error binding {host}:{str(port)}: {str(err)}")
 
 
 
@@ -156,11 +160,11 @@ def construct_response() -> bytes:
         script_name:str = interpretted_AST[1]
       
       except Exception as err:
-        print(f"Fatal Error: Could not interpret the AST ... Error: {str(err)}")
+        print(f"Fatal Error: Could not interpret the AST: {str(err)}")
     except Exception as err:
-      print(f"Fatal Error: Could not parse tokens into nodal-AST ... Error: {str(err)}")
+      print(f"Fatal Error: Could not parse tokens into nodal-AST: {str(err)}")
   except Exception as err:
-    print(f"Fatal Error: Could not tokenize script ... Error: {str(err)}")
+    print(f"Fatal Error: Could not tokenize script: {str(err)}")
   
   # set default headers
   response_headers = {}

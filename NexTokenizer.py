@@ -10,6 +10,7 @@ string_delim_tokens = NexServerGlobals.string_delim_tokens
 xml_delim_tokens = NexServerGlobals.xml_delim_tokens
 ref_type_tokens = NexServerGlobals.ref_type_tokens
 method_types = NexServerGlobals.method_types
+config = NexServerGlobals.config
 
 
 
@@ -50,6 +51,7 @@ def tokenize_script(script:str, script_name:str = "Unknown Nexus Module")->tuple
   #global expr_type_tokens
   #global ref_type_tokens
   #global method_types
+  #global config
 
   token_stack = TokenStack()
 
