@@ -14,14 +14,11 @@ xml_delim_tokens = NexServerGlobals.xml_delim_tokens
 ref_type_tokens = NexServerGlobals.ref_type_tokens
 method_types = NexServerGlobals.method_types
 
-variables:dict = {} # a list of references and values
-content:str = '' # CONTENT INTERPRETED!!
 
 
 
 
-
-def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->str:
+def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tuple:
   """USES AST TO GENERATE AN OUTPUT"""
   #global all_reserved_tokens
   #global expr_type_tokens
@@ -29,6 +26,9 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->str:
   #global xml_delim_tokens
   #global ref_type_tokens
   global method_types
+
+  variables:dict = {} # a list of references and values
+  content:str = '' # CONTENT INTERPRETED!!
 
   def interpretVarAssignment(node:dict, node_id:int, child_returns:list)->None:
     """Interprets the assignment of a value to a variable"""
@@ -73,7 +73,7 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->str:
 
   def interpretRefCall(node:dict, node_id:int, child_returns:list)->None:
     """Run a call to a reference, such as var, function, object calls"""
-    global content
+    nonlocal content
 
     ref_name = child_returns[0]['ref_name']
     ref_params = child_returns[0]['ref_params']
@@ -164,7 +164,7 @@ def interpretAST(obj_AST:object, script_name:str = "Unknown Nexus Module")->str:
   expression_mode = None # tracks what the current expression is (eg, var assignment, reference call, etc)
   def processNode(node:dict, node_id:int, child_returns:list)->any:
     """Processes the node"""
-    global variables
+    nonlocal variables
     nonlocal expression_mode
 
     node_type = node["nodeType"]

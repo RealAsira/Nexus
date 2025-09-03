@@ -46,7 +46,7 @@ default_stack = TokenStack()
 
 
 
-def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_stack:object=default_stack) -> object:
+def tokenizeScript(script:str, script_name:str = "Unknown Nexus Module", token_stack:object=default_stack)->tuple:
   """Process a script into a token stack"""
   global all_reserved_tokens, string_delim_tokens, xml_delim_tokens
   #global expr_type_tokens
