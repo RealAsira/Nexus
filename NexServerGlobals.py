@@ -6,9 +6,6 @@ all_reserved_tokens:dict = {
   ' ': 'whitespace',
   '\n': 'nl',
   '\\': 'escNxt',   #single \ to escape next char
-  '#': 'lnCmt',     #single line comment
-  '/*': 'cmtStrt',  #multi-line comment
-  '*/': 'cmtEnd',
 
   # Expression
   '@': 'exprStrt',    #special char to start expr
@@ -236,6 +233,11 @@ ref_type_tokens = {
 
   'CONST': 'ref',     #immutable, non-reassignable var
   'VAR': 'ref',       #mutable unless type explicitly stated in declaration
+}
+
+
+comment_delim_tokens:dict = {
+  '#',   # single line comment
 }
 
 

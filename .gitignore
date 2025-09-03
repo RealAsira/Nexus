@@ -3,5 +3,5 @@
 /__pycache__
 
 # hide config and workspace paths
-NexServer.config
+NexServer.conf
 *.code-workspace

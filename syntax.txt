@@ -103,21 +103,20 @@
 
 
 # NOT YET ADDED OPERATORS
-/*
-abs     absolute val
-trunc   truncate float to int
-floor   round float down to int
-ceil    round float up to int
-cos
-sin
-tan
-acos
-asin
-atan
-exp   exponentiation of e (exp(10) = e^10) ??should I keep?
-nlog  natural log
-log   log of
-*/
+# abs     absolute val
+# trunc   truncate float to int
+# floor   round float down to int
+# ceil    round float up to int
+# cos
+# sin
+# tan
+# acos
+# asin
+# atan
+# exp   exponentiation of e (exp(10) = e^10) ??should I keep?
+# nlog  natural log
+# log   log of
+
 
 
 
@@ -143,9 +142,9 @@ log   log of
 
 # how to handle multiple libs/modules/global scoping?
 
-/*
-NEED TO CREATE VSCODE SYNTAX HIGHLIGHT EXTENSION
-*/
+
+# NEED TO CREATE VSCODE SYNTAX HIGHLIGHT EXTENSION
+
 
 
 
