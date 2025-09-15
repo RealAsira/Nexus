@@ -111,13 +111,13 @@ def interpret_AST(obj_AST:object, script_name:str = "Unknown Nexus Module")->tup
       print(config['print_unknown_ref'])
       if config['print_unknown_ref'] == True:
         content += f"[UNKNOWN_REF {{{ref_name}}}]"
-        print(f'WARNING: interpret_ref_call for {ref_name} could not be completed due to unidentified reference mode: {ref_mode} ... appened [UNKNOWN_REF {{{ref_name}}}] instead of expected return value.')
+        print(f'WARNING: interpret_ref_call for @{ref_name} could not be completed due to unidentified reference mode {ref_mode}: returning [UNKNOWN_REF {{{ref_name}}}] instead of expected return value.')
       else: 
         content += f"[UNKNOWN_REF]"
-        print(f'WARNING: interpret_ref_call for {ref_name} could not be completed due to unidentified reference mode: {ref_mode} ... appened [UNKNOWN_REF] instead of expected return value.')
+        print(f'WARNING: interpret_ref_call for @{ref_name} could not be completed due to unidentified reference mode {ref_mode}: returning [UNKNOWN_REF] instead of expected return value.')
 
     else:
-      print(f'interpret_ref_call for {ref_name} could not be completed due to no assignment of reference mode.')
+      print(f'interpret_ref_call for @{ref_name} could not be completed due to no assignment of reference mode.')
 
 
 
